@@ -76,6 +76,7 @@ module system_top (
   output          i2s_sdata_out,
   input           i2s_sdata_in,
 
+
   inout           iic_scl,
   inout           iic_sda,
   inout   [ 1:0]  iic_mux_scl,
@@ -108,8 +109,7 @@ module system_top (
   inout           cn0561_gpio4,
   inout           cn0561_gpio5,
   inout           cn0561_gpio6,
-  inout           cn0561_gpio7
-);
+  inout           cn0561_gpio7);
 
   // internal signals
 
@@ -215,28 +215,20 @@ module system_top (
     .spi0_clk_o (cn0561_spi_sclk),
     .spi0_csn_0_o (cn0561_spi_cs),
     .spi0_csn_1_o (),
-    .spi0_csn_2_o (),
     .spi0_csn_i (1'b1),
     .spi0_sdi_i (cn0561_spi_sdi),
     .spi0_sdo_i (cn0561_spi_sdo),
     .spi0_sdo_o (cn0561_spi_sdo),
-    .spi1_clk_i (1'b0),
-    .spi1_clk_o (),
-    .spi1_csn_0_o (),
-    .spi1_csn_1_o (),
-    .spi1_csn_2_o (),
-    .spi1_csn_i (1'b1),
-    .spi1_sdi_i (1'b0),
-    .spi1_sdo_i (1'b0),
-    .spi1_sdo_o (),
     .cn0561_di_sdo (),
     .cn0561_di_sdo_t (),
     .cn0561_di_sdi (cn0561_din),
     .cn0561_di_cs (),
     .cn0561_di_sclk (cn0561_dclk),
     .cn0561_odr (cn0561_odr),
-    .cn0561_di_three_wire (),
     .otg_vbusoc (otg_vbusoc),
     .spdif (spdif));
 
 endmodule
+
+// ***************************************************************************
+// ***************************************************************************

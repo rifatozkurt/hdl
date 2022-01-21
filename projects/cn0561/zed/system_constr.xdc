@@ -6,6 +6,7 @@ set_property -dict {PACKAGE_PIN M22 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_s
 set_property -dict {PACKAGE_PIN N19 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_sclk]      ; ## FMC_LPC_LA01_CC_P
 set_property -dict {PACKAGE_PIN J18 IOSTANDARD LVCMOS25} [get_ports cn0561_spi_cs]        ; ## FMC_LPC_LA05_P
 
+
 # cn0561 data interface
 
 set_property -dict {PACKAGE_PIN L18 IOSTANDARD LVCMOS25} [get_ports cn0561_dclk]          ; ## FMC_LPC_CLK0_M2C_P
