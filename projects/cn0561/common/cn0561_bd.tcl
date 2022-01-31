@@ -81,9 +81,11 @@ ad_ip_parameter axi_cn0561_dma CONFIG.DMA_TYPE_SRC 1
 ad_ip_parameter axi_cn0561_dma CONFIG.DMA_TYPE_DEST 0
 ad_ip_parameter axi_cn0561_dma CONFIG.CYCLIC 0
 ad_ip_parameter axi_cn0561_dma CONFIG.SYNC_TRANSFER_START 0
+ad_ip_parameter axi_cn0561_dma CONFIG.AXI_SLICE_SRC 0
+ad_ip_parameter axi_cn0561_dma CONFIG.AXI_SLICE_DEST 1
 ad_ip_parameter axi_cn0561_dma CONFIG.DMA_2D_TRANSFER 0
 ad_ip_parameter axi_cn0561_dma CONFIG.DMA_DATA_WIDTH_SRC [expr $data_width * $adc_num_of_channels]
-ad_ip_parameter axi_cn0561_dma CONFIG.DMA_DATA_WIDTH_DEST 64
+ad_ip_parameter axi_cn0561_dma CONFIG.DMA_DATA_WIDTH_DEST 128
 
 # odr generator
 
@@ -91,13 +93,13 @@ ad_ip_instance axi_pwm_gen odr_generator
 ad_ip_parameter odr_generator CONFIG.N_PWMS 1
 ad_ip_parameter odr_generator CONFIG.PULSE_0_PERIOD 10000
 ad_ip_parameter odr_generator CONFIG.PULSE_0_WIDTH 4
-ad_ip_parameter odr_generator CONFIG.ASYNC_CLK_EN 0
 
 create_bd_cell -type module -reference sync_bits busy_sync
 create_bd_cell -type module -reference ad_edge_detect busy_capture
 set_property -dict [list CONFIG.EDGE 1] [get_bd_cells busy_capture]
 
 ad_connect odr_generator/pwm_0 cn0561_odr
+ad_connect $sys_cpu_clk odr_generator/ext_clk
 
 ad_connect axi_cn0561_clkgen/clk_0 busy_capture/clk
 ad_connect axi_cn0561_clkgen/clk_0 busy_sync/out_clk
@@ -126,6 +128,5 @@ ad_cpu_interconnect 0x44b10000 axi_cn0561_clkgen
 ad_cpu_interrupt "ps-13" "mb-13" axi_cn0561_dma/irq
 ad_cpu_interrupt "ps-12" "mb-12" cn0561_spi/irq
 
-ad_mem_hp1_interconnect $sys_cpu_clk sys_ps7/S_AXI_HP1
-ad_mem_hp1_interconnect $sys_cpu_clk axi_cn0561_dma/m_dest_axi
+ad_mem_hp0_interconnect sys_cpu_clk axi_cn0561_dma/m_dest_axi
 

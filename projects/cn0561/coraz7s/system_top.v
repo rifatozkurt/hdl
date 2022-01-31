@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2019 - 2022 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2019 - 2020 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -62,7 +62,7 @@ module system_top (
 
   inout   [1:0]   btn,
   inout   [5:0]   led,
-
+  
   inout           iic_scl,
   inout           iic_sda,
 
@@ -79,15 +79,14 @@ module system_top (
   input   [ 3:0]  cn0561_din,
   output          cn0561_odr,
 
-  inout           cn0561_pdn
-);
+  inout           cn0561_pdn);
 
   // internal signals
 
   wire    [63:0]  gpio_i;
   wire    [63:0]  gpio_o;
   wire    [63:0]  gpio_t;
-
+  
   // instantiations
 
   ad_iobuf #(
@@ -107,8 +106,7 @@ module system_top (
     .dio_p(led));
 
   assign gpio_i[63:33] = gpio_o[63:33];
-  assign gpio_i[31:8] = gpio_o[31:8];
-
+  
   ad_iobuf #(
     .DATA_WIDTH(1)
   ) i_iobuf_cn0561_gpio (
@@ -116,6 +114,8 @@ module system_top (
     .dio_i(gpio_o[32]),
     .dio_o(gpio_i[32]),
     .dio_p({cn0561_pdn}));
+
+
 
   system_wrapper i_system_wrapper (
     .ddr_addr (ddr_addr),
@@ -147,8 +147,6 @@ module system_top (
     .spi0_clk_i (cn0561_spi_sclk),
     .spi0_clk_o (cn0561_spi_sclk),
     .spi0_csn_0_o (cn0561_spi_cs),
-    .spi0_csn_1_o (),
-    .spi0_csn_2_o (),
     .spi0_csn_i (1'b1),
     .spi0_sdi_i (cn0561_spi_sdi),
     .spi0_sdo_i (cn0561_spi_sdo),
@@ -167,7 +165,9 @@ module system_top (
     .cn0561_di_sdi (cn0561_din),
     .cn0561_di_cs (),
     .cn0561_di_sclk (cn0561_dclk),
-    .cn0561_di_three_wire (),
     .cn0561_odr (cn0561_odr));
 
 endmodule
+
+// ***************************************************************************
+// ***************************************************************************
