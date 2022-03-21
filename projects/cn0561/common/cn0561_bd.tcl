@@ -93,13 +93,13 @@ ad_ip_instance axi_pwm_gen odr_generator
 ad_ip_parameter odr_generator CONFIG.N_PWMS 1
 ad_ip_parameter odr_generator CONFIG.PULSE_0_PERIOD 10000
 ad_ip_parameter odr_generator CONFIG.PULSE_0_WIDTH 4
+ad_ip_parameter odr_generator CONFIG.ASYNC_CLK_EN 0
 
 create_bd_cell -type module -reference sync_bits busy_sync
 create_bd_cell -type module -reference ad_edge_detect busy_capture
 set_property -dict [list CONFIG.EDGE 1] [get_bd_cells busy_capture]
 
 ad_connect odr_generator/pwm_0 cn0561_odr
-ad_connect $sys_cpu_clk odr_generator/ext_clk
 
 ad_connect axi_cn0561_clkgen/clk_0 busy_capture/clk
 ad_connect axi_cn0561_clkgen/clk_0 busy_sync/out_clk
