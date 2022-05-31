@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -51,29 +51,8 @@ module system_top (
   input                   sys_clk_p,
   input                   sys_clk_n,
 
-/*
-  output      [13:0]      ddr3_addr,
-  output      [ 2:0]      ddr3_ba,
-  output                  ddr3_cas_n,
-  output      [ 0:0]      ddr3_ck_n,
-  output      [ 0:0]      ddr3_ck_p,
-  output      [ 0:0]      ddr3_cke,
-  output      [ 0:0]      ddr3_cs_n,
-  output      [ 7:0]      ddr3_dm,
-  inout       [63:0]      ddr3_dq,
-  inout       [ 7:0]      ddr3_dqs_n,
-  inout       [ 7:0]      ddr3_dqs_p,
-  output      [ 0:0]      ddr3_odt,
-  output                  ddr3_ras_n,
-  output                  ddr3_reset_n,
-  output                  ddr3_we_n,
-*/
-
   inout                   iic_scl,
   inout                   iic_sda,
-
-//de aici inlocuiesti tot cu ce ai in constrangeri
-
 
   output                  rx_0_clk_p,
   output                  rx_0_clk_n,
@@ -83,7 +62,6 @@ module system_top (
   output                  rx_2_clk_n,
   output                  rx_3_clk_p,
   output                  rx_3_clk_n,
-
 
   output                  rx_0_cnv_p,
   output                  rx_0_cnv_n,
@@ -121,7 +99,6 @@ module system_top (
   input                   rx_3_da_p,
   input                   rx_3_da_n,
 
-
   output                  tx_0_1_cs,
   output                  tx_0_1_sclk,
   inout                   tx_0_1_sdio0,
@@ -135,30 +112,10 @@ module system_top (
   inout                   tx_2_3_sdio2,
   inout                   tx_2_3_sdio3,
 
-
   input                   spi_0_miso,
   output                  spi_0_mosi,
   output                  spi_0_sck,
   output                  spi_0_csb0
-
-/*
-  output                  fmc_la14_p,
-  output                  fmc_la14_n,
-  output                  fmc_la30_p,
-  output                  fmc_la30_n,
-  input                   fmc_la31_p,
-  output                  fmc_la31_n,
-  output                  fmc_la32_p,
-  output                  fmc_la32_n,
-
-
-  input                   alert_1,
-  output                  ladc_1,
-  input                   alert_2,
-  output                  ldac_2
-*/
-
-
 );
 
   // internal signals
@@ -181,7 +138,6 @@ module system_top (
   wire            tx_ref_clk;
   wire            tx_sysref;
   wire            tx_sync;
-
 
   wire            rx_0_cnv_s;
   wire            rx_1_cnv_s;
@@ -230,26 +186,27 @@ module system_top (
 
   // instantiations
 
-//spi stuff
+  // spi
 
   ad_iobuf #(
-  .DATA_WIDTH(4)
+    .DATA_WIDTH(4)
   ) i_spi_iobuf0 (
     .dio_t(tx_0_1_sdt),
     .dio_i(tx_0_1_sdo),
-    .dio_o(tx_0_1_sdi), 
+    .dio_o(tx_0_1_sdi),
     .dio_p(tx_0_1_sdio));
 
   ad_iobuf #(
-  .DATA_WIDTH(4)
+    .DATA_WIDTH(4)
   ) i_spi_iobuf1 (
     .dio_t(tx_2_3_sdt),
     .dio_i(tx_2_3_sdo),
-    .dio_o(tx_2_3_sdi), 
+    .dio_o(tx_2_3_sdi),
     .dio_p(tx_2_3_sdio));
 
-
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr0 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr0 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -258,7 +215,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_0_clk));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr1 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr1 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -267,7 +226,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_1_clk));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr2 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr2 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -276,7 +237,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_2_clk));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr3 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr3 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -285,7 +248,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_3_clk));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr0 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr0 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -294,7 +259,9 @@ module system_top (
     .D2 (rx_0_cnv),
     .Q (rx_0_cnv_s));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr1 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr1 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -303,7 +270,9 @@ module system_top (
     .D2 (rx_1_cnv),
     .Q (rx_1_cnv_s));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr2 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr2 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -312,7 +281,9 @@ module system_top (
     .D2 (rx_2_cnv),
     .Q (rx_2_cnv_s));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr3 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr3 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -361,11 +332,9 @@ module system_top (
     .OB(rx_3_cnv_n),
     .I(rx_3_cnv_s));
 
-
-  //assign spi_clk = spi0_clk;
-
-
-  ad_iobuf #(.DATA_WIDTH(15)) i_iobuf_bd (
+  ad_iobuf #(
+    .DATA_WIDTH(15)
+  ) i_iobuf_bd (
     .dio_t (gpio_t[14:0]),
     .dio_i (gpio_o[14:0]),
     .dio_o (gpio_i[14:0]),
@@ -388,6 +357,7 @@ module system_top (
     .iic_main_scl_io (iic_scl),
     .iic_main_sda_io (iic_sda),
     .spdif (spdif),
+
     .spi0_clk_i (spi0_clk),
     .spi0_clk_o (spi0_clk),
     .spi0_csn_0_o (spi0_csn[0]),
@@ -397,6 +367,7 @@ module system_top (
     .spi0_sdi_i (spi0_miso),
     .spi0_sdo_i (spi0_mosi),
     .spi0_sdo_o (spi0_mosi),
+
     .spi1_clk_i (spi1_clk),
     .spi1_clk_o (spi1_clk),
     .spi1_csn_0_o (spi1_csn[0]),
@@ -406,10 +377,7 @@ module system_top (
     .spi1_sdi_i (1'b1),
     .spi1_sdo_i (spi1_mosi),
     .spi1_sdo_o (spi1_mosi),
-    //.sys_clk_clk_n (sys_clk_n),
-    //.sys_clk_clk_p (sys_clk_p),
-    //.sys_rst (sys_rst),
-    //.ref_clk    (clk_s),
+
     .rx_0_dco_p   (rx_0_dco_p),
     .rx_0_dco_n   (rx_0_dco_n),
     .rx_0_cnv     (rx_0_cnv),
@@ -417,6 +385,7 @@ module system_top (
     .rx_0_da_n    (rx_0_da_n),
     .rx_0_db_p    (rx_0_db_p),
     .rx_0_db_n    (rx_0_db_n),
+
     .rx_1_dco_p   (rx_1_dco_p),
     .rx_1_dco_n   (rx_1_dco_n),
     .rx_1_cnv     (rx_1_cnv),
@@ -424,6 +393,7 @@ module system_top (
     .rx_1_da_n    (rx_1_da_n),
     .rx_1_db_p    (rx_1_db_p),
     .rx_1_db_n    (rx_1_db_n),
+
     .rx_2_dco_p   (rx_2_dco_p),
     .rx_2_dco_n   (rx_2_dco_n),
     .rx_2_cnv     (rx_2_cnv),
@@ -431,6 +401,7 @@ module system_top (
     .rx_2_da_n    (rx_2_da_n),
     .rx_2_db_p    (rx_2_db_p),
     .rx_2_db_n    (rx_2_db_n),
+
     .rx_3_dco_p   (rx_3_dco_p),
     .rx_3_dco_n   (rx_3_dco_n),
     .rx_3_cnv     (rx_3_cnv),
@@ -438,7 +409,7 @@ module system_top (
     .rx_3_da_n    (rx_3_da_n),
     .rx_3_db_p    (rx_3_db_p),
     .rx_3_db_n    (rx_3_db_n),
-///*
+
     .tx_0_1_cs   (tx_0_1_cs),
     .tx_0_1_sclk (tx_0_1_sclk),
     .tx_0_1_sdi0 (tx_0_1_sdi[0]),
@@ -449,13 +420,12 @@ module system_top (
     .tx_0_1_sdo1 (tx_0_1_sdo[1]),
     .tx_0_1_sdo2 (tx_0_1_sdo[2]),
     .tx_0_1_sdo3 (tx_0_1_sdo[3]),
-//    .tx_0_1_sdt (tx_0_1_sdt),
-///*
+
     .tx_0_1_sdt0 (tx_0_1_sdt[0]),
     .tx_0_1_sdt1 (tx_0_1_sdt[1]),
     .tx_0_1_sdt2 (tx_0_1_sdt[2]),
     .tx_0_1_sdt3 (tx_0_1_sdt[3]),
-//*/
+
     .tx_2_3_cs   (tx_2_3_cs),
     .tx_2_3_sclk (tx_2_3_sclk),
     .tx_2_3_sdi0 (tx_2_3_sdi[0]),
@@ -466,32 +436,12 @@ module system_top (
     .tx_2_3_sdo1 (tx_2_3_sdo[1]),
     .tx_2_3_sdo2 (tx_2_3_sdo[2]),
     .tx_2_3_sdo3 (tx_2_3_sdo[3]),
-//    .tx_2_3_sdt (tx_2_3_sdt),
-///*
+
     .tx_2_3_sdt0 (tx_2_3_sdt[0]),
     .tx_2_3_sdt1 (tx_2_3_sdt[1]),
     .tx_2_3_sdt2 (tx_2_3_sdt[2]),
     .tx_2_3_sdt3 (tx_2_3_sdt[3]),
-//*/
-//*/
-/*
-    .tx_0_1_cs    (tx_0_1_cs),
-    .tx_0_1_sclk  (tx_0_1_sclk),
-    .tx_0_1_sdio0 (tx_0_1_sdio[0]),
-    .tx_0_1_sdio1 (tx_0_1_sdio[1]),
-    .tx_0_1_sdio2 (tx_0_1_sdio[2]),
-    .tx_0_1_sdio3 (tx_0_1_sdio[3]),
-    .tx_2_3_cs    (tx_2_3_cs),
-    .tx_2_3_sclk  (tx_2_3_sclk),
-    .tx_2_3_sdio0 (tx_2_3_sdio[0]),
-    .tx_2_3_sdio1 (tx_2_3_sdio[1]),
-    .tx_2_3_sdio2 (tx_2_3_sdio[2]),
-    .tx_2_3_sdio3 (tx_2_3_sdio[3]),
-*/
-    .sampling_clk(sampling_clk_s)
-    );
+
+    .sampling_clk(sampling_clk_s));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -147,16 +147,14 @@ module system_top (
 
   wire    [ 3:0]  ltc_clk;
 
-
   assign gpio_i[63:32] = gpio_o[63:32];
   //direction High for A->B
-//  assign direction = 1'b1;
+  //assign direction = 1'b1;
   assign reset  = 1'b1;
 
-  //LDAC active low
+  // LDAC active low
   assign ldac_1 = 1'b1;
   assign ldac_2 = 1'b1;
-
 
   ad_3w_spi i_spi (
     .spi_csn (dac_cs[0]),
@@ -192,25 +190,9 @@ module system_top (
     .dio_o(iic_mux_sda_i_s),
     .dio_p(iic_mux_sda));
 
-//de aici
-
-//  ad_iobuf #(
-//  .DATA_WIDTH(4)
-//  ) i_spi_iobuf0 (
-//    .dio_t(tx_0_1_sdt),
-//    .dio_i(tx_0_1_sdo),
-//    .dio_o(tx_0_1_sdi),
-//    .dio_p(tx_0_1_sdio));
-//
-//  ad_iobuf #(
-//  .DATA_WIDTH(4)
-//  ) i_spi_iobuf1 (
-//    .dio_t(tx_2_3_sdt),
-//    .dio_i(tx_2_3_sdo),
-//    .dio_o(tx_2_3_sdi),
-//    .dio_p(tx_2_3_sdio));
-
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr0 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr0 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -219,7 +201,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_clk[0]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr1 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr1 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -228,7 +212,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_clk[1]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr2 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr2 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -237,7 +223,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_clk[2]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr3 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr3 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -246,7 +234,9 @@ module system_top (
     .D2 (1'b0),
     .Q (ltc_clk[3]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr0 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr0 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -255,7 +245,9 @@ module system_top (
     .D2 (rx_cnv[0]),
     .Q (rx_cnv_s[0]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr1 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr1 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -264,7 +256,9 @@ module system_top (
     .D2 (rx_cnv[1]),
     .Q (rx_cnv_s[1]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr2 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr2 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -273,7 +267,9 @@ module system_top (
     .D2 (rx_cnv[2]),
     .Q (rx_cnv_s[2]));
 
-  ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr3 (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr3 (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -367,6 +363,7 @@ module system_top (
     .iic_mux_sda_t (iic_mux_sda_t_s),
     .otg_vbusoc (otg_vbusoc),
     .spdif (spdif),
+
     .spi0_clk_i (1'b0),
     .spi0_clk_o (),
     .spi0_csn_0_o (),
@@ -394,7 +391,6 @@ module system_top (
     .max_spi_csn_i(spi_csb),
     .max_spi_csn_o(spi_csb),
 
-
     .dac1_spi_clk_i(dac_sclk[0]),
     .dac1_spi_clk_o(dac_sclk[0]),
     .dac1_spi_sdo_i(dac_sdio0[0]),
@@ -418,6 +414,7 @@ module system_top (
     .rx_0_da_n    (rx_da_n[0]),
     .rx_0_db_p    (rx_db_p[0]),
     .rx_0_db_n    (rx_db_n[0]),
+
     .rx_1_dco_p   (rx_dco_p[1]),
     .rx_1_dco_n   (rx_dco_n[1]),
     .rx_1_cnv     (rx_cnv[1]),
@@ -425,6 +422,7 @@ module system_top (
     .rx_1_da_n    (rx_da_n[1]),
     .rx_1_db_p    (rx_db_p[1]),
     .rx_1_db_n    (rx_db_n[1]),
+
     .rx_2_dco_p   (rx_dco_p[2]),
     .rx_2_dco_n   (rx_dco_n[2]),
     .rx_2_cnv     (rx_cnv[2]),
@@ -432,6 +430,7 @@ module system_top (
     .rx_2_da_n    (rx_da_n[2]),
     .rx_2_db_p    (rx_db_p[2]),
     .rx_2_db_n    (rx_db_n[2]),
+
     .rx_3_dco_p   (rx_dco_p[3]),
     .rx_3_dco_n   (rx_dco_n[3]),
     .rx_3_cnv     (rx_cnv[3]),
@@ -439,11 +438,8 @@ module system_top (
     .rx_3_da_n    (rx_da_n[3]),
     .rx_3_db_p    (rx_db_p[3]),
     .rx_3_db_n    (rx_db_n[3]),
+
     .clk_gate     (clk_gate),
-    .sampling_clk(sampling_clk_s)
-);
+    .sampling_clk(sampling_clk_s));
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2021 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2021 - 2022 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -94,12 +94,11 @@ module system_top (
   input                   db_n,
   input                   db_p,
 
-
   output                  cnv_p,
-  output                  cnv_n);
+  output                  cnv_n
+);
 
-
-// internal signals
+  // internal signals
 
   wire    [63:0]  gpio_i;
   wire    [63:0]  gpio_o;
@@ -119,18 +118,20 @@ module system_top (
   wire            sampling_clk_s;
   wire            ltc_clk;
 
-// instantiations
+  // instantiations
 
-ad_data_clk #(
-  .SINGLE_ENDED (0))
-  i_ref_clk (
+  ad_data_clk #(
+    .SINGLE_ENDED (0)
+  ) i_ref_clk (
     .rst (1'b0),
     .locked (),
     .clk_in_p (ref_clk_p),
     .clk_in_n (ref_clk_n),
     .clk (clk_s));
 
-ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_tx_clk_oddr (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -139,7 +140,9 @@ ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_tx_clk_oddr (
     .D2 (1'b0),
     .Q (ltc_clk));
 
-ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr (
+  ODDR #(
+    .DDR_CLK_EDGE ("SAME_EDGE")
+  ) i_cnv_oddr (
     .CE (1'b1),
     .R (1'b0),
     .S (1'b0),
@@ -148,41 +151,43 @@ ODDR #(.DDR_CLK_EDGE ("SAME_EDGE")) i_cnv_oddr (
     .D2 (cnv),
     .Q (cnv_s));
 
-OBUFDS i_tx_data_obuf (
+  OBUFDS i_tx_data_obuf (
     .I (ltc_clk),
     .O (clk_p),
     .OB (clk_n));
 
-OBUFDS OBUFDS_cnv (
+  OBUFDS OBUFDS_cnv (
     .O(cnv_p),
     .OB(cnv_n),
     .I(cnv_s));
 
-ad_iobuf #(.DATA_WIDTH(32)) iobuf_gpio_bd (
+  ad_iobuf #(
+    .DATA_WIDTH(32)
+  ) iobuf_gpio_bd (
     .dio_i (gpio_o[31:0]),
     .dio_o (gpio_i[31:0]),
     .dio_t (gpio_t[31:0]),
     .dio_p (gpio_bd));
 
-assign gpio_i[63:32] = gpio_o[63:32];
+  assign gpio_i[63:32] = gpio_o[63:32];
 
-ad_iobuf #(
-  .DATA_WIDTH(2)
+  ad_iobuf #(
+    .DATA_WIDTH(2)
   ) i_iic_mux_scl (
     .dio_t({iic_mux_scl_t_s, iic_mux_scl_t_s}),
     .dio_i(iic_mux_scl_o_s),
     .dio_o(iic_mux_scl_i_s),
     .dio_p(iic_mux_scl));
 
-ad_iobuf #(
-  .DATA_WIDTH(2)
+  ad_iobuf #(
+    .DATA_WIDTH(2)
   ) i_iic_mux_sda (
     .dio_t({iic_mux_sda_t_s, iic_mux_sda_t_s}),
     .dio_i(iic_mux_sda_o_s),
     .dio_o(iic_mux_sda_i_s),
     .dio_p(iic_mux_sda));
 
-system_wrapper i_system_wrapper (
+  system_wrapper i_system_wrapper (
     .ddr_addr(ddr_addr),
     .ddr_ba(ddr_ba),
     .ddr_cas_n(ddr_cas_n),
@@ -257,6 +262,3 @@ system_wrapper i_system_wrapper (
     .spi1_sdo_o ());
 
 endmodule
-
-// ***************************************************************************
-// ***************************************************************************

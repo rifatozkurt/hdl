@@ -35,7 +35,7 @@ create_bd_port -dir I rx_3_da_n
 create_bd_port -dir I rx_3_db_p
 create_bd_port -dir I rx_3_db_n
 
-#max7301
+# max7301
 create_bd_port -dir I max_spi_csn_i
 create_bd_port -dir O max_spi_csn_o
 create_bd_port -dir I max_spi_clk_i
@@ -59,6 +59,7 @@ create_bd_port -dir O dac2_spi_clk_o
 create_bd_port -dir I dac2_spi_sdo_i
 create_bd_port -dir O dac2_spi_sdo_o
 create_bd_port -dir I dac2_spi_sdi_i
+
 # adc peripheral
 
 ad_ip_instance axi_ltc2387 axi_ltc2387_0
@@ -66,21 +67,21 @@ ad_ip_parameter axi_ltc2387_0 CONFIG.ADC_RES 16
 ad_ip_parameter axi_ltc2387_0 CONFIG.OUT_RES 16
 ad_ip_parameter axi_ltc2387_0 CONFIG.TWOLANES 1
 ad_ip_parameter axi_ltc2387_0 CONFIG.ADC_INIT_DELAY 27
-#
+
 ad_ip_instance axi_ltc2387 axi_ltc2387_1
 ad_ip_parameter axi_ltc2387_1 CONFIG.ADC_RES 16
 ad_ip_parameter axi_ltc2387_1 CONFIG.OUT_RES 16
 ad_ip_parameter axi_ltc2387_1 CONFIG.TWOLANES 1
 ad_ip_parameter axi_ltc2387_1 CONFIG.ADC_INIT_DELAY 27
 ad_ip_parameter axi_ltc2387_1 CONFIG.IODELAY_CTRL 0
-#
+
 ad_ip_instance axi_ltc2387 axi_ltc2387_2
 ad_ip_parameter axi_ltc2387_2 CONFIG.ADC_RES 16
 ad_ip_parameter axi_ltc2387_2 CONFIG.OUT_RES 16
 ad_ip_parameter axi_ltc2387_2 CONFIG.TWOLANES 1
 ad_ip_parameter axi_ltc2387_2 CONFIG.ADC_INIT_DELAY 27
 ad_ip_parameter axi_ltc2387_2 CONFIG.IO_DELAY_GROUP adc_if_delay_group2
-#
+
 ad_ip_instance axi_ltc2387 axi_ltc2387_3
 ad_ip_parameter axi_ltc2387_3 CONFIG.ADC_RES 16
 ad_ip_parameter axi_ltc2387_3 CONFIG.OUT_RES 16
@@ -166,6 +167,7 @@ ad_connect sys_ps7/FCLK_CLK0  axi_clkgen/clk
 ad_connect axi_clkgen/clk_0  sampling_clk
 
 # ltc adc connections
+
 ad_connect sys_200m_clk axi_ltc2387_0/delay_clk
 
 ad_connect axi_clkgen/clk_0  axi_ltc2387_0/ref_clk
@@ -216,17 +218,17 @@ ad_connect rx_2_cnv   axi_pwm_gen/pwm_0
 ad_connect rx_3_cnv   axi_pwm_gen/pwm_0
 ad_connect clk_gate   axi_pwm_gen/pwm_1
 
-ad_connect axi_clkgen/clk_0       axi_pwm_gen/ext_clk
-ad_connect sys_cpu_resetn         axi_pwm_gen/s_axi_aresetn
-ad_connect sys_cpu_clk            axi_pwm_gen/s_axi_aclk
-ad_connect axi_clkgen/clk_0       axi_pwm_gen_1/ext_clk
-ad_connect sys_cpu_resetn         axi_pwm_gen_1/s_axi_aresetn
-ad_connect sys_cpu_clk            axi_pwm_gen_1/s_axi_aclk
+ad_connect axi_clkgen/clk_0   axi_pwm_gen/ext_clk
+ad_connect sys_cpu_resetn     axi_pwm_gen/s_axi_aresetn
+ad_connect sys_cpu_clk        axi_pwm_gen/s_axi_aclk
+ad_connect axi_clkgen/clk_0   axi_pwm_gen_1/ext_clk
+ad_connect sys_cpu_resetn     axi_pwm_gen_1/s_axi_aresetn
+ad_connect sys_cpu_clk        axi_pwm_gen_1/s_axi_aclk
 
-ad_connect axi_clkgen/clk_0       axi_ltc2387_dma_0/fifo_wr_clk
-ad_connect axi_clkgen/clk_0       axi_ltc2387_dma_1/fifo_wr_clk
-ad_connect axi_clkgen/clk_0       axi_ltc2387_dma_2/fifo_wr_clk
-ad_connect axi_clkgen/clk_0       axi_ltc2387_dma_3/fifo_wr_clk
+ad_connect axi_clkgen/clk_0   axi_ltc2387_dma_0/fifo_wr_clk
+ad_connect axi_clkgen/clk_0   axi_ltc2387_dma_1/fifo_wr_clk
+ad_connect axi_clkgen/clk_0   axi_ltc2387_dma_2/fifo_wr_clk
+ad_connect axi_clkgen/clk_0   axi_ltc2387_dma_3/fifo_wr_clk
 
 ad_connect axi_ltc2387_0/adc_valid  axi_ltc2387_dma_0/fifo_wr_en
 ad_connect axi_ltc2387_0/adc_data   axi_ltc2387_dma_0/fifo_wr_din
@@ -252,57 +254,57 @@ ad_ip_parameter max_spi CONFIG.C_USE_STARTUP_INT 0
 ad_ip_parameter max_spi CONFIG.C_SPI_MODE 0
 ad_ip_parameter max_spi CONFIG.C_SCK_RATIO 16
 ad_ip_parameter max_spi CONFIG.C_NUM_TRANSFER_BITS 16
-#
+
 ## connections
-#
+
 ad_connect sys_ps7/FCLK_CLK0  max_spi/ext_spi_clk
 ad_connect sys_ps7/FCLK_CLK0  max_spi/s_axi_aclk
 
-ad_connect  max_spi_csn_i max_spi/ss_i
-ad_connect  max_spi_csn_o max_spi/ss_o
-ad_connect  max_spi_clk_i max_spi/sck_i
-ad_connect  max_spi_clk_o max_spi/sck_o
-ad_connect  max_spi_sdo_i max_spi/io0_i
-ad_connect  max_spi_sdo_o max_spi/io0_o
-ad_connect  max_spi_sdi_i max_spi/io1_i
+ad_connect max_spi_csn_i max_spi/ss_i
+ad_connect max_spi_csn_o max_spi/ss_o
+ad_connect max_spi_clk_i max_spi/sck_i
+ad_connect max_spi_clk_o max_spi/sck_o
+ad_connect max_spi_sdo_i max_spi/io0_i
+ad_connect max_spi_sdo_o max_spi/io0_o
+ad_connect max_spi_sdi_i max_spi/io1_i
 
 ad_ip_instance axi_quad_spi dac1_spi
 ad_ip_parameter dac1_spi CONFIG.C_USE_STARTUP 0
 ad_ip_parameter dac1_spi CONFIG.C_USE_STARTUP_INT 0
 ad_ip_parameter dac1_spi CONFIG.C_SPI_MODE 0
 ad_ip_parameter dac1_spi CONFIG.C_SCK_RATIO 16
-#
+
 ## connections
-#
-ad_connect axi_clkgen/clk_0  dac1_spi/ext_spi_clk
+
+ad_connect axi_clkgen/clk_0   dac1_spi/ext_spi_clk
 ad_connect sys_ps7/FCLK_CLK0  dac1_spi/s_axi_aclk
 
-ad_connect  dac1_spi_csn_i dac1_spi/ss_i
-ad_connect  dac1_spi_csn_o dac1_spi/ss_o
-ad_connect  dac1_spi_clk_i dac1_spi/sck_i
-ad_connect  dac1_spi_clk_o dac1_spi/sck_o
-ad_connect  dac1_spi_sdo_i dac1_spi/io0_i
-ad_connect  dac1_spi_sdo_o dac1_spi/io0_o
-ad_connect  dac1_spi_sdi_i dac1_spi/io1_i
+ad_connect dac1_spi_csn_i dac1_spi/ss_i
+ad_connect dac1_spi_csn_o dac1_spi/ss_o
+ad_connect dac1_spi_clk_i dac1_spi/sck_i
+ad_connect dac1_spi_clk_o dac1_spi/sck_o
+ad_connect dac1_spi_sdo_i dac1_spi/io0_i
+ad_connect dac1_spi_sdo_o dac1_spi/io0_o
+ad_connect dac1_spi_sdi_i dac1_spi/io1_i
 
 ad_ip_instance axi_quad_spi dac2_spi
 ad_ip_parameter dac2_spi CONFIG.C_USE_STARTUP 0
 ad_ip_parameter dac2_spi CONFIG.C_USE_STARTUP_INT 0
 ad_ip_parameter dac2_spi CONFIG.C_SPI_MODE 0
 ad_ip_parameter dac2_spi CONFIG.C_SCK_RATIO 16
-#
+
 ## connections
-#
-ad_connect axi_clkgen/clk_0  dac2_spi/ext_spi_clk
+
+ad_connect axi_clkgen/clk_0   dac2_spi/ext_spi_clk
 ad_connect sys_ps7/FCLK_CLK0  dac2_spi/s_axi_aclk
 
-ad_connect  dac2_spi_csn_i dac2_spi/ss_i
-ad_connect  dac2_spi_csn_o dac2_spi/ss_o
-ad_connect  dac2_spi_clk_i dac2_spi/sck_i
-ad_connect  dac2_spi_clk_o dac2_spi/sck_o
-ad_connect  dac2_spi_sdo_i dac2_spi/io0_i
-ad_connect  dac2_spi_sdo_o dac2_spi/io0_o
-ad_connect  dac2_spi_sdi_i dac2_spi/io1_i
+ad_connect dac2_spi_csn_i dac2_spi/ss_i
+ad_connect dac2_spi_csn_o dac2_spi/ss_o
+ad_connect dac2_spi_clk_i dac2_spi/sck_i
+ad_connect dac2_spi_clk_o dac2_spi/sck_o
+ad_connect dac2_spi_sdo_i dac2_spi/io0_i
+ad_connect dac2_spi_sdo_o dac2_spi/io0_o
+ad_connect dac2_spi_sdi_i dac2_spi/io1_i
 
 # address mapping
 
@@ -329,10 +331,10 @@ ad_mem_hp2_interconnect $sys_cpu_clk axi_ltc2387_dma_1/m_dest_axi
 ad_mem_hp2_interconnect $sys_cpu_clk axi_ltc2387_dma_2/m_dest_axi
 ad_mem_hp2_interconnect $sys_cpu_clk axi_ltc2387_dma_3/m_dest_axi
 
-ad_connect  $sys_cpu_resetn axi_ltc2387_dma_0/m_dest_axi_aresetn
-ad_connect  $sys_cpu_resetn axi_ltc2387_dma_1/m_dest_axi_aresetn
-ad_connect  $sys_cpu_resetn axi_ltc2387_dma_2/m_dest_axi_aresetn
-ad_connect  $sys_cpu_resetn axi_ltc2387_dma_3/m_dest_axi_aresetn
+ad_connect $sys_cpu_resetn axi_ltc2387_dma_0/m_dest_axi_aresetn
+ad_connect $sys_cpu_resetn axi_ltc2387_dma_1/m_dest_axi_aresetn
+ad_connect $sys_cpu_resetn axi_ltc2387_dma_2/m_dest_axi_aresetn
+ad_connect $sys_cpu_resetn axi_ltc2387_dma_3/m_dest_axi_aresetn
 
 # interrupts
 

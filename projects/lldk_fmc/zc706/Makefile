@@ -4,13 +4,11 @@
 ## Auto-generated, do not modify!
 ####################################################################################
 
-PROJECT_NAME := ltc2387_fmc_zc706
+PROJECT_NAME := lldk_fmc_zc706
 
 M_DEPS += ../../scripts/adi_pd.tcl
 M_DEPS += ../../common/zc706/zc706_system_constr.xdc
 M_DEPS += ../../common/zc706/zc706_system_bd.tcl
-M_DEPS += ../../../library/xilinx/common/ad_data_out.v
-M_DEPS += ../../../library/xilinx/common/ad_data_clk.v
 M_DEPS += ../../../library/common/ad_iobuf.v
 
 LIB_DEPS += axi_clkgen
