@@ -94,11 +94,11 @@ module system_top (
   input       [ 3:0]      rx_dco_p,
   input       [ 3:0]      rx_dco_n,
 
-  input       [ 3:0]      rx_db_p,
-  input       [ 3:0]      rx_db_n,
-
   input       [ 3:0]      rx_da_p,
   input       [ 3:0]      rx_da_n,
+
+  input       [ 3:0]      rx_db_p,
+  input       [ 3:0]      rx_db_n,
 
   output      [ 1:0]      dac_cs,
   output      [ 1:0]      dac_sclk,
@@ -112,44 +112,37 @@ module system_top (
   output                  spi_sck,
   output                  spi_csb,
 
-  input                   fmc_la14_p,
-  input                   fmc_la14_n,
-  input                   fmc_la30_p,
-  input                   fmc_la30_n,
-  input                   fmc_la31_p,
-  input                   fmc_la31_n,
   output                  direction,
   output                  reset,
 
   input                   alert_1,
-  output                  ldac_1,
   input                   alert_2,
+  output                  ldac_1,
   output                  ldac_2
 );
 
   // internal signals
 
-  wire    [63:0]  gpio_i;
-  wire    [63:0]  gpio_o;
-  wire    [63:0]  gpio_t;
-  wire    [ 1:0]  iic_mux_scl_i_s;
-  wire    [ 1:0]  iic_mux_scl_o_s;
-  wire            iic_mux_scl_t_s;
-  wire    [ 1:0]  iic_mux_sda_i_s;
-  wire    [ 1:0]  iic_mux_sda_o_s;
-  wire            iic_mux_sda_t_s;
+  wire    [63:0]   gpio_i;
+  wire    [63:0]   gpio_o;
+  wire    [63:0]   gpio_t;
+  wire    [ 1:0]   iic_mux_scl_i_s;
+  wire    [ 1:0]   iic_mux_scl_o_s;
+  wire             iic_mux_scl_t_s;
+  wire    [ 1:0]   iic_mux_sda_i_s;
+  wire    [ 1:0]   iic_mux_sda_o_s;
+  wire             iic_mux_sda_t_s;
 
-  wire    [ 3:0]  rx_cnv_s;
-  wire    [ 3:0]  rx_cnv;
+  wire    [ 3:0]   rx_cnv_s;
+  wire    [ 3:0]   rx_cnv;
+  wire    [ 3:0]   ltc_clk;
 
-  wire            clk_gate;
-  wire            sampling_clk_s;
-
-  wire    [ 3:0]  ltc_clk;
+  wire             clk_gate;
+  wire             sampling_clk_s;
 
   assign gpio_i[63:32] = gpio_o[63:32];
-  //direction High for A->B
-  //assign direction = 1'b1;
+  // direction High for A->B
+  // assign direction = 1'b1;
   assign reset  = 1'b1;
 
   // LDAC active low
@@ -167,28 +160,28 @@ module system_top (
   // instantiations
 
   ad_iobuf #(
-    .DATA_WIDTH(32)
+    .DATA_WIDTH (32)
   ) i_iobuf (
-    .dio_t(gpio_t[31:0]),
-    .dio_i(gpio_o[31:0]),
-    .dio_o(gpio_i[31:0]),
-    .dio_p(gpio_bd));
+    .dio_t (gpio_t[31:0]),
+    .dio_i (gpio_o[31:0]),
+    .dio_o (gpio_i[31:0]),
+    .dio_p (gpio_bd));
 
   ad_iobuf #(
-    .DATA_WIDTH(2)
+    .DATA_WIDTH (2)
   ) i_iic_mux_scl (
-    .dio_t({iic_mux_scl_t_s, iic_mux_scl_t_s}),
-    .dio_i(iic_mux_scl_o_s),
-    .dio_o(iic_mux_scl_i_s),
-    .dio_p(iic_mux_scl));
+    .dio_t ({iic_mux_scl_t_s, iic_mux_scl_t_s}),
+    .dio_i (iic_mux_scl_o_s),
+    .dio_o (iic_mux_scl_i_s),
+    .dio_p (iic_mux_scl));
 
   ad_iobuf #(
-    .DATA_WIDTH(2)
+    .DATA_WIDTH (2)
   ) i_iic_mux_sda (
-    .dio_t({iic_mux_sda_t_s, iic_mux_sda_t_s}),
-    .dio_i(iic_mux_sda_o_s),
-    .dio_o(iic_mux_sda_i_s),
-    .dio_p(iic_mux_sda));
+    .dio_t ({iic_mux_sda_t_s, iic_mux_sda_t_s}),
+    .dio_i (iic_mux_sda_o_s),
+    .dio_o (iic_mux_sda_i_s),
+    .dio_p (iic_mux_sda));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -299,24 +292,24 @@ module system_top (
     .OB (rx_clk_n[3]));
 
   OBUFDS OBUFDS_cnv0 (
-    .O(rx_cnv_p[0]),
-    .OB(rx_cnv_n[0]),
-    .I(rx_cnv_s[0]));
+    .O (rx_cnv_p[0]),
+    .OB (rx_cnv_n[0]),
+    .I (rx_cnv_s[0]));
 
   OBUFDS OBUFDS_cnv1 (
-    .O(rx_cnv_p[1]),
-    .OB(rx_cnv_n[1]),
-    .I(rx_cnv_s[1]));
+    .O (rx_cnv_p[1]),
+    .OB (rx_cnv_n[1]),
+    .I (rx_cnv_s[1]));
 
   OBUFDS OBUFDS_cnv2 (
-    .O(rx_cnv_p[2]),
-    .OB(rx_cnv_n[2]),
-    .I(rx_cnv_s[2]));
+    .O (rx_cnv_p[2]),
+    .OB (rx_cnv_n[2]),
+    .I (rx_cnv_s[2]));
 
   OBUFDS OBUFDS_cnv3 (
-    .O(rx_cnv_p[3]),
-    .OB(rx_cnv_n[3]),
-    .I(rx_cnv_s[3]));
+    .O (rx_cnv_p[3]),
+    .OB (rx_cnv_n[3]),
+    .I (rx_cnv_s[3]));
 
   system_wrapper i_system_wrapper (
     .ddr_addr (ddr_addr),
@@ -383,29 +376,29 @@ module system_top (
     .spi1_sdo_i (1'b0),
     .spi1_sdo_o (),
 
-    .max_spi_clk_i(spi_sck),
-    .max_spi_clk_o(spi_sck),
-    .max_spi_sdo_i(spi_mosi),
-    .max_spi_sdo_o(spi_mosi),
-    .max_spi_sdi_i(spi_miso),
-    .max_spi_csn_i(spi_csb),
-    .max_spi_csn_o(spi_csb),
+    .max_spi_clk_i (spi_sck),
+    .max_spi_clk_o (spi_sck),
+    .max_spi_sdo_i (spi_mosi),
+    .max_spi_sdo_o (spi_mosi),
+    .max_spi_sdi_i (spi_miso),
+    .max_spi_csn_i (spi_csb),
+    .max_spi_csn_o (spi_csb),
 
-    .dac1_spi_clk_i(dac_sclk[0]),
-    .dac1_spi_clk_o(dac_sclk[0]),
-    .dac1_spi_sdo_i(dac_sdio0[0]),
-    .dac1_spi_sdo_o(dac_sdio0[0]),
-    .dac1_spi_sdi_i(dac_sdio1[0]),
-    .dac1_spi_csn_i(dac_cs[0]),
-    .dac1_spi_csn_o(dac_cs[0]),
+    .dac1_spi_clk_i (dac_sclk[0]),
+    .dac1_spi_clk_o (dac_sclk[0]),
+    .dac1_spi_sdo_i (dac_sdio0[0]),
+    .dac1_spi_sdo_o (dac_sdio0[0]),
+    .dac1_spi_sdi_i (dac_sdio1[0]),
+    .dac1_spi_csn_i (dac_cs[0]),
+    .dac1_spi_csn_o (dac_cs[0]),
 
-    .dac2_spi_clk_i(dac_sclk[1]),
-    .dac2_spi_clk_o(dac_sclk[1]),
-    .dac2_spi_sdo_i(dac_sdio0[1]),
-    .dac2_spi_sdo_o(dac_sdio0[1]),
-    .dac2_spi_sdi_i(dac_sdio1[1]),
-    .dac2_spi_csn_i(dac_cs[1]),
-    .dac2_spi_csn_o(dac_cs[1]),
+    .dac2_spi_clk_i (dac_sclk[1]),
+    .dac2_spi_clk_o (dac_sclk[1]),
+    .dac2_spi_sdo_i (dac_sdio0[1]),
+    .dac2_spi_sdo_o (dac_sdio0[1]),
+    .dac2_spi_sdi_i (dac_sdio1[1]),
+    .dac2_spi_csn_i (dac_cs[1]),
+    .dac2_spi_csn_o (dac_cs[1]),
 
     .rx_0_dco_p   (rx_dco_p[0]),
     .rx_0_dco_n   (rx_dco_n[0]),

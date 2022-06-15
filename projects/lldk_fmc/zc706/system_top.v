@@ -54,80 +54,54 @@ module system_top (
   inout                   iic_scl,
   inout                   iic_sda,
 
-  output                  rx_0_clk_p,
-  output                  rx_0_clk_n,
-  output                  rx_1_clk_p,
-  output                  rx_1_clk_n,
-  output                  rx_2_clk_p,
-  output                  rx_2_clk_n,
-  output                  rx_3_clk_p,
-  output                  rx_3_clk_n,
+  // project specific signals
 
-  output                  rx_0_cnv_p,
-  output                  rx_0_cnv_n,
-  output                  rx_1_cnv_p,
-  output                  rx_1_cnv_n,
-  output                  rx_2_cnv_p,
-  output                  rx_2_cnv_n,
-  output                  rx_3_cnv_p,
-  output                  rx_3_cnv_n,
+  output      [ 3:0]      rx_clk_p,
+  output      [ 3:0]      rx_clk_n,
 
-  input                   rx_0_dco_p,
-  input                   rx_0_dco_n,
-  input                   rx_1_dco_p,
-  input                   rx_1_dco_n,
-  input                   rx_2_dco_p,
-  input                   rx_2_dco_n,
-  input                   rx_3_dco_p,
-  input                   rx_3_dco_n,
+  output      [ 3:0]      rx_cnv_p,
+  output      [ 3:0]      rx_cnv_n,
 
-  input                   rx_0_db_p,
-  input                   rx_0_db_n,
-  input                   rx_1_db_p,
-  input                   rx_1_db_n,
-  input                   rx_2_db_p,
-  input                   rx_2_db_n,
-  input                   rx_3_db_p,
-  input                   rx_3_db_n,
+  input       [ 3:0]      rx_dco_p,
+  input       [ 3:0]      rx_dco_n,
 
-  input                   rx_0_da_p,
-  input                   rx_0_da_n,
-  input                   rx_1_da_p,
-  input                   rx_1_da_n,
-  input                   rx_2_da_p,
-  input                   rx_2_da_n,
-  input                   rx_3_da_p,
-  input                   rx_3_da_n,
+  input       [ 3:0]      rx_da_p,
+  input       [ 3:0]      rx_da_n,
 
-  output                  tx_0_1_cs,
-  output                  tx_0_1_sclk,
-  inout                   tx_0_1_sdio0,
-  inout                   tx_0_1_sdio1,
-  inout                   tx_0_1_sdio2,
-  inout                   tx_0_1_sdio3,
-  output                  tx_2_3_cs,
-  output                  tx_2_3_sclk,
-  inout                   tx_2_3_sdio0,
-  inout                   tx_2_3_sdio1,
-  inout                   tx_2_3_sdio2,
-  inout                   tx_2_3_sdio3,
+  input       [ 3:0]      rx_db_p,
+  input       [ 3:0]      rx_db_n,
 
-  input                   spi_0_miso,
-  output                  spi_0_mosi,
-  output                  spi_0_sck,
-  output                  spi_0_csb0
+  output      [ 1:0]      dac_cs,
+  output      [ 1:0]      dac_sclk,
+  output      [ 1:0]      dac_sdio0,
+  input       [ 1:0]      dac_sdio1,
+  input       [ 1:0]      dac_sdio2,
+  input       [ 1:0]      dac_sdio3,
+
+  input                   spi_miso,
+  output                  spi_mosi,
+  output                  spi_sck,
+  output                  spi_csb,
+
+  output                  direction,
+  output                  reset,
+
+  input                   alert_2,
+  input                   alert_1,
+  output                  ldac_2,
+  output                  ldac_1
 );
 
   // internal signals
 
-  wire    [63:0]  gpio_i;
-  wire    [63:0]  gpio_o;
-  wire    [63:0]  gpio_t;
-  wire    [ 2:0]  spi0_csn;
+  wire   [63:0]   gpio_i;
+  wire   [63:0]   gpio_o;
+  wire   [63:0]   gpio_t;
+  wire   [ 2:0]   spi0_csn;
   wire            spi0_clk;
   wire            spi0_mosi;
   wire            spi0_miso;
-  wire    [ 2:0]  spi1_csn;
+  wire   [ 2:0]   spi1_csn;
   wire            spi1_clk;
   wire            spi1_mosi;
   wire            spi1_miso;
@@ -135,50 +109,22 @@ module system_top (
   wire            rx_ref_clk;
   wire            rx_sysref;
   wire            rx_sync;
-  wire            tx_ref_clk;
-  wire            tx_sysref;
-  wire            tx_sync;
 
-  wire            rx_0_cnv_s;
-  wire            rx_1_cnv_s;
-  wire            rx_2_cnv_s;
-  wire            rx_3_cnv_s;
-
-  wire            rx_0_cnv;
-  wire            rx_1_cnv;
-  wire            rx_2_cnv;
-  wire            rx_3_cnv;
+  wire   [ 3:0]   rx_cnv_s;
+  wire   [ 3:0]   rx_cnv;
+  wire   [ 3:0]   ltc_clk;
 
   wire            clk_gate;
   wire            sampling_clk_s;
 
-  wire            ltc_0_clk;
-  wire            ltc_1_clk;
-  wire            ltc_2_clk;
-  wire            ltc_3_clk;
+  // assignations
 
-  wire   [ 3:0]   tx_0_1_sdio;
-  wire   [ 3:0]   tx_2_3_sdio;
-
-  wire   [ 3:0]   tx_0_1_sdt;
-  wire   [ 3:0]   tx_0_1_sdo;
-  wire   [ 3:0]   tx_0_1_sdi;
-
-  wire   [ 3:0]   tx_2_3_sdt;
-  wire   [ 3:0]   tx_2_3_sdo;
-  wire   [ 3:0]   tx_2_3_sdi;
+  assign gpio_i[63:44] = gpio_o[63:44];
+  assign gpio_i[39] = gpio_o[39];
+  assign gpio_i[37] = gpio_o[37];
+  assign gpio_i[31:15] = gpio_o[31:15];
 
   // spi
-
-  assign tx_0_1_sdio[0] = tx_0_1_sdio0;
-  assign tx_0_1_sdio[1] = tx_0_1_sdio1;
-  assign tx_0_1_sdio[2] = tx_0_1_sdio2;
-  assign tx_0_1_sdio[3] = tx_0_1_sdio3;
-
-  assign tx_2_3_sdio[0] = tx_2_3_sdio0;
-  assign tx_2_3_sdio[1] = tx_2_3_sdio1;
-  assign tx_2_3_sdio[2] = tx_2_3_sdio2;
-  assign tx_2_3_sdio[3] = tx_2_3_sdio3;
 
   assign spi_csn_adc = spi0_csn[2];
   assign spi_csn_dac = spi0_csn[1];
@@ -186,23 +132,13 @@ module system_top (
 
   // instantiations
 
-  // spi
-
   ad_iobuf #(
-    .DATA_WIDTH(4)
-  ) i_spi_iobuf0 (
-    .dio_t(tx_0_1_sdt),
-    .dio_i(tx_0_1_sdo),
-    .dio_o(tx_0_1_sdi),
-    .dio_p(tx_0_1_sdio));
-
-  ad_iobuf #(
-    .DATA_WIDTH(4)
-  ) i_spi_iobuf1 (
-    .dio_t(tx_2_3_sdt),
-    .dio_i(tx_2_3_sdo),
-    .dio_o(tx_2_3_sdi),
-    .dio_p(tx_2_3_sdio));
+    .DATA_WIDTH(15)
+  ) i_iobuf_bd (
+    .dio_t (gpio_t[14:0]),
+    .dio_i (gpio_o[14:0]),
+    .dio_o (gpio_i[14:0]),
+    .dio_p (gpio_bd));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -213,7 +149,7 @@ module system_top (
     .C (sampling_clk_s),
     .D1 (clk_gate),
     .D2 (1'b0),
-    .Q (ltc_0_clk));
+    .Q (ltc_clk[0]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -224,7 +160,7 @@ module system_top (
     .C (sampling_clk_s),
     .D1 (clk_gate),
     .D2 (1'b0),
-    .Q (ltc_1_clk));
+    .Q (ltc_clk[1]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -235,7 +171,7 @@ module system_top (
     .C (sampling_clk_s),
     .D1 (clk_gate),
     .D2 (1'b0),
-    .Q (ltc_2_clk));
+    .Q (ltc_clk[2]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -246,7 +182,7 @@ module system_top (
     .C (sampling_clk_s),
     .D1 (clk_gate),
     .D2 (1'b0),
-    .Q (ltc_3_clk));
+    .Q (ltc_clk[3]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -255,9 +191,9 @@ module system_top (
     .R (1'b0),
     .S (1'b0),
     .C (sampling_clk_s),
-    .D1 (rx_0_cnv),
-    .D2 (rx_0_cnv),
-    .Q (rx_0_cnv_s));
+    .D1 (rx_cnv[0]),
+    .D2 (rx_cnv[0]),
+    .Q (rx_cnv_s[0]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -266,9 +202,9 @@ module system_top (
     .R (1'b0),
     .S (1'b0),
     .C (sampling_clk_s),
-    .D1 (rx_1_cnv),
-    .D2 (rx_1_cnv),
-    .Q (rx_1_cnv_s));
+    .D1 (rx_cnv[1]),
+    .D2 (rx_cnv[1]),
+    .Q (rx_cnv_s[1]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -277,9 +213,9 @@ module system_top (
     .R (1'b0),
     .S (1'b0),
     .C (sampling_clk_s),
-    .D1 (rx_2_cnv),
-    .D2 (rx_2_cnv),
-    .Q (rx_2_cnv_s));
+    .D1 (rx_cnv[2]),
+    .D2 (rx_cnv[2]),
+    .Q (rx_cnv_s[2]));
 
   ODDR #(
     .DDR_CLK_EDGE ("SAME_EDGE")
@@ -288,62 +224,49 @@ module system_top (
     .R (1'b0),
     .S (1'b0),
     .C (sampling_clk_s),
-    .D1 (rx_3_cnv),
-    .D2 (rx_3_cnv),
-    .Q (rx_3_cnv_s));
+    .D1 (rx_cnv[3]),
+    .D2 (rx_cnv[3]),
+    .Q (rx_cnv_s[3]));
 
   OBUFDS i_tx_data_obuf0 (
-    .I (ltc_0_clk),
-    .O (rx_0_clk_p),
-    .OB (rx_0_clk_n));
+    .I (ltc_clk[0]),
+    .O (rx_clk_p[0]),
+    .OB (rx_clk_n[0]));
 
   OBUFDS i_tx_data_obuf1 (
-    .I (ltc_1_clk),
-    .O (rx_1_clk_p),
-    .OB (rx_1_clk_n));
+    .I (ltc_clk[1]),
+    .O (rx_clk_p[1]),
+    .OB (rx_clk_n[1]));
 
   OBUFDS i_tx_data_obuf2 (
-    .I (ltc_2_clk),
-    .O (rx_2_clk_p),
-    .OB (rx_2_clk_n));
+    .I (ltc_clk[2]),
+    .O (rx_clk_p[2]),
+    .OB (rx_clk_n[2]));
 
   OBUFDS i_tx_data_obuf3 (
-    .I (ltc_3_clk),
-    .O (rx_3_clk_p),
-    .OB (rx_3_clk_n));
+    .I (ltc_clk[3]),
+    .O (rx_clk_p[3]),
+    .OB (rx_clk_n[3]));
 
   OBUFDS OBUFDS_cnv0 (
-    .O(rx_0_cnv_p),
-    .OB(rx_0_cnv_n),
-    .I(rx_0_cnv_s));
+    .O (rx_cnv_p[0]),
+    .OB (rx_cnv_n[0]),
+    .I (rx_cnv_s[0]));
 
   OBUFDS OBUFDS_cnv1 (
-    .O(rx_1_cnv_p),
-    .OB(rx_1_cnv_n),
-    .I(rx_1_cnv_s));
+    .O (rx_cnv_p[1]),
+    .OB (rx_cnv_n[1]),
+    .I (rx_cnv_s[1]));
 
   OBUFDS OBUFDS_cnv2 (
-    .O(rx_2_cnv_p),
-    .OB(rx_2_cnv_n),
-    .I(rx_2_cnv_s));
+    .O (rx_cnv_p[2]),
+    .OB (rx_cnv_n[2]),
+    .I (rx_cnv_s[2]));
 
   OBUFDS OBUFDS_cnv3 (
-    .O(rx_3_cnv_p),
-    .OB(rx_3_cnv_n),
-    .I(rx_3_cnv_s));
-
-  ad_iobuf #(
-    .DATA_WIDTH(15)
-  ) i_iobuf_bd (
-    .dio_t (gpio_t[14:0]),
-    .dio_i (gpio_o[14:0]),
-    .dio_o (gpio_i[14:0]),
-    .dio_p (gpio_bd));
-
-  assign gpio_i[63:44] = gpio_o[63:44];
-  assign gpio_i[39] = gpio_o[39];
-  assign gpio_i[37] = gpio_o[37];
-  assign gpio_i[31:15] = gpio_o[31:15];
+    .O (rx_cnv_p[3]),
+    .OB (rx_cnv_n[3]),
+    .I (rx_cnv_s[3]));
 
   system_wrapper i_system_wrapper (
     .gpio_i (gpio_i),
@@ -378,70 +301,38 @@ module system_top (
     .spi1_sdo_i (spi1_mosi),
     .spi1_sdo_o (spi1_mosi),
 
-    .rx_0_dco_p   (rx_0_dco_p),
-    .rx_0_dco_n   (rx_0_dco_n),
-    .rx_0_cnv     (rx_0_cnv),
-    .rx_0_da_p    (rx_0_da_p),
-    .rx_0_da_n    (rx_0_da_n),
-    .rx_0_db_p    (rx_0_db_p),
-    .rx_0_db_n    (rx_0_db_n),
+    .rx_0_dco_p   (rx_dco_p[0]),
+    .rx_0_dco_n   (rx_dco_n[0]),
+    .rx_0_cnv     (rx_cnv[0]),
+    .rx_0_da_p    (rx_da_p[0]),
+    .rx_0_da_n    (rx_da_n[0]),
+    .rx_0_db_p    (rx_db_p[0]),
+    .rx_0_db_n    (rx_db_n[0]),
 
-    .rx_1_dco_p   (rx_1_dco_p),
-    .rx_1_dco_n   (rx_1_dco_n),
-    .rx_1_cnv     (rx_1_cnv),
-    .rx_1_da_p    (rx_1_da_p),
-    .rx_1_da_n    (rx_1_da_n),
-    .rx_1_db_p    (rx_1_db_p),
-    .rx_1_db_n    (rx_1_db_n),
+    .rx_1_dco_p   (rx_dco_p[1]),
+    .rx_1_dco_n   (rx_dco_n[1]),
+    .rx_1_cnv     (rx_cnv[1]),
+    .rx_1_da_p    (rx_da_p[1]),
+    .rx_1_da_n    (rx_da_n[1]),
+    .rx_1_db_p    (rx_db_p[1]),
+    .rx_1_db_n    (rx_db_n[1]),
 
-    .rx_2_dco_p   (rx_2_dco_p),
-    .rx_2_dco_n   (rx_2_dco_n),
-    .rx_2_cnv     (rx_2_cnv),
-    .rx_2_da_p    (rx_2_da_p),
-    .rx_2_da_n    (rx_2_da_n),
-    .rx_2_db_p    (rx_2_db_p),
-    .rx_2_db_n    (rx_2_db_n),
+    .rx_2_dco_p   (rx_dco_p[2]),
+    .rx_2_dco_n   (rx_dco_n[2]),
+    .rx_2_cnv     (rx_cnv[2]),
+    .rx_2_da_p    (rx_da_p[2]),
+    .rx_2_da_n    (rx_da_n[2]),
+    .rx_2_db_p    (rx_db_p[2]),
+    .rx_2_db_n    (rx_db_n[2]),
 
-    .rx_3_dco_p   (rx_3_dco_p),
-    .rx_3_dco_n   (rx_3_dco_n),
-    .rx_3_cnv     (rx_3_cnv),
-    .rx_3_da_p    (rx_3_da_p),
-    .rx_3_da_n    (rx_3_da_n),
-    .rx_3_db_p    (rx_3_db_p),
-    .rx_3_db_n    (rx_3_db_n),
+    .rx_3_dco_p   (rx_dco_p[3]),
+    .rx_3_dco_n   (rx_dco_n[3]),
+    .rx_3_cnv     (rx_cnv[3]),
+    .rx_3_da_p    (rx_da_p[3]),
+    .rx_3_da_n    (rx_da_n[3]),
+    .rx_3_db_p    (rx_db_p[3]),
+    .rx_3_db_n    (rx_db_n[3]),
 
-    .tx_0_1_cs   (tx_0_1_cs),
-    .tx_0_1_sclk (tx_0_1_sclk),
-    .tx_0_1_sdi0 (tx_0_1_sdi[0]),
-    .tx_0_1_sdi1 (tx_0_1_sdi[1]),
-    .tx_0_1_sdi2 (tx_0_1_sdi[2]),
-    .tx_0_1_sdi3 (tx_0_1_sdi[3]),
-    .tx_0_1_sdo0 (tx_0_1_sdo[0]),
-    .tx_0_1_sdo1 (tx_0_1_sdo[1]),
-    .tx_0_1_sdo2 (tx_0_1_sdo[2]),
-    .tx_0_1_sdo3 (tx_0_1_sdo[3]),
-
-    .tx_0_1_sdt0 (tx_0_1_sdt[0]),
-    .tx_0_1_sdt1 (tx_0_1_sdt[1]),
-    .tx_0_1_sdt2 (tx_0_1_sdt[2]),
-    .tx_0_1_sdt3 (tx_0_1_sdt[3]),
-
-    .tx_2_3_cs   (tx_2_3_cs),
-    .tx_2_3_sclk (tx_2_3_sclk),
-    .tx_2_3_sdi0 (tx_2_3_sdi[0]),
-    .tx_2_3_sdi1 (tx_2_3_sdi[1]),
-    .tx_2_3_sdi2 (tx_2_3_sdi[2]),
-    .tx_2_3_sdi3 (tx_2_3_sdi[3]),
-    .tx_2_3_sdo0 (tx_2_3_sdo[0]),
-    .tx_2_3_sdo1 (tx_2_3_sdo[1]),
-    .tx_2_3_sdo2 (tx_2_3_sdo[2]),
-    .tx_2_3_sdo3 (tx_2_3_sdo[3]),
-
-    .tx_2_3_sdt0 (tx_2_3_sdt[0]),
-    .tx_2_3_sdt1 (tx_2_3_sdt[1]),
-    .tx_2_3_sdt2 (tx_2_3_sdt[2]),
-    .tx_2_3_sdt3 (tx_2_3_sdt[3]),
-
-    .sampling_clk(sampling_clk_s));
+    .sampling_clk (sampling_clk_s));
 
 endmodule
