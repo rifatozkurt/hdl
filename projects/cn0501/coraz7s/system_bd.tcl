@@ -9,6 +9,4 @@ ad_ip_parameter rom_sys_0 CONFIG.ROM_ADDR_BITS 9
 set sys_cstring "sys rom custom string placeholder"
 sysid_gen_sys_init_file $sys_cstring
 
-#set sys_dma_clk [get_bd_nets sys_dma_clk]
-
 source ../common/cn0501_bd.tcl

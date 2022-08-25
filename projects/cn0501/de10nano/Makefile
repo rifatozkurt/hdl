@@ -4,19 +4,16 @@
 ## Auto-generated, do not modify!
 ####################################################################################
 
-PROJECT_NAME := cn0501_coraz7s
+PROJECT_NAME := cn0501_de10nano
 
-M_DEPS += ../common/cn0501_bd.tcl
+M_DEPS += ../common/cn0501_qsys.tcl
 M_DEPS += ../../scripts/adi_pd.tcl
-M_DEPS += ../../common/coraz7s/coraz7s_system_ps7.tcl
-M_DEPS += ../../common/coraz7s/coraz7s_system_constr.xdc
-M_DEPS += ../../common/coraz7s/coraz7s_system_bd.tcl
-M_DEPS += ../../../library/common/ad_iobuf.v
+M_DEPS += ../../common/de10nano/de10nano_system_qsys.tcl
+M_DEPS += ../../common/de10nano/de10nano_system_assign.tcl
 
 LIB_DEPS += axi_ad7768
 LIB_DEPS += axi_dmac
-LIB_DEPS += axi_sysid
-LIB_DEPS += sysid_rom
+LIB_DEPS += axi_hdmi_tx
 LIB_DEPS += util_pack/util_cpack2
 
-include ../../scripts/project-xilinx.mk
+include ../../scripts/project-intel.mk
