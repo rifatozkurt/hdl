@@ -118,14 +118,11 @@ module system_top (
 
   input                   adc_clk_in,
   input                   adc_ready_in,
-  input       [ 3:0]      adc_data_in,
+  input       [ 7:0]      adc_data_in,
   output                  spi_csn,
   output                  spi_clk,
   output                  spi_mosi,
-  input                   spi_miso,
-  output                  reset_n,
-  output                  start_n,
-  output                  shutdown_n
+  input                   spi_miso
 );
 
   // internal signals
@@ -145,11 +142,6 @@ module system_top (
   wire             i2c0_out_clk;
   wire             i2c0_scl_in_clk;
 
-  // adc control gpio assign
-
-
-  assign shutdown_n = gpio_o[33];
-  assign reset_n = gpio_o[32];
 
   assign gpio_i[63:15] = gpio_o[63:15];
 
