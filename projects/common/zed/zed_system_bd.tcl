@@ -220,6 +220,7 @@ ad_connect  axi_hdmi_dma/m_axis axi_hdmi_core/s_axis
 
 ad_connect sys_cpu_resetn axi_hdmi_dma/s_axi_aresetn
 ad_connect sys_cpu_resetn axi_hdmi_dma/m_src_axi_aresetn
+ad_connect sys_cpu_resetn axi_hdmi_dma/m_sg_axi_aresetn
 
 ad_connect  sys_cpu_clk axi_hdmi_dma/s_axi_aclk
 ad_connect  sys_cpu_clk axi_hdmi_dma/m_src_axi_aclk
@@ -299,3 +300,4 @@ ad_cpu_interconnect 0x41620000 axi_iic_fmc
 
 ad_mem_hp0_interconnect sys_cpu_clk sys_ps7/S_AXI_HP0
 ad_mem_hp0_interconnect sys_cpu_clk axi_hdmi_dma/m_src_axi
+ad_mem_hp0_interconnect sys_cpu_clk axi_hdmi_dma/m_sg_axi
