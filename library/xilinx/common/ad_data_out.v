@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2014 - 2017 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2014 - 2023 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -144,15 +144,15 @@ module ad_data_out #(
 
   generate
   if (IODELAY_CTRL_ENABLED == 0) begin
-  assign delay_locked = 1'b1;
+    assign delay_locked = 1'b1;
   end else begin
-  (* IODELAY_GROUP = IODELAY_GROUP *)
-  IDELAYCTRL #(
-    .SIM_DEVICE (IODELAY_CTRL_SIM_DEVICE)
-  ) i_delay_ctrl (
-    .RST (delay_rst),
-    .REFCLK (delay_clk),
-    .RDY (delay_locked));
+    (* IODELAY_GROUP = IODELAY_GROUP *)
+    IDELAYCTRL #(
+      .SIM_DEVICE (IODELAY_CTRL_SIM_DEVICE)
+    ) i_delay_ctrl (
+      .RST (delay_rst),
+      .REFCLK (delay_clk),
+      .RDY (delay_locked));
   end
   endgenerate
 
@@ -171,29 +171,29 @@ module ad_data_out #(
 
   generate
   if ((FPGA_TECHNOLOGY == ULTRASCALE) || (FPGA_TECHNOLOGY == ULTRASCALE_PLUS)) begin
-  ODDRE1 #(
-    .SIM_DEVICE (IODELAY_SIM_DEVICE)
-  ) i_tx_data_oddr (
-    .SR (1'b0),
-    .C (tx_clk),
-    .D1 (tx_data_p),
-    .D2 (tx_data_n),
-    .Q (tx_data_oddr_s));
+    ODDRE1 #(
+      .SIM_DEVICE (IODELAY_SIM_DEVICE)
+    ) i_tx_data_oddr (
+      .SR (1'b0),
+      .C (tx_clk),
+      .D1 (tx_data_p),
+      .D2 (tx_data_n),
+      .Q (tx_data_oddr_s));
   end
   endgenerate
 
   generate
   if (FPGA_TECHNOLOGY == SEVEN_SERIES) begin
-  ODDR #(
-    .DDR_CLK_EDGE (IDDR_CLK_EDGE)
-  ) i_tx_data_oddr (
-    .CE (1'b1),
-    .R (1'b0),
-    .S (1'b0),
-    .C (tx_clk),
-    .D1 (tx_data_p),
-    .D2 (tx_data_n),
-    .Q (tx_data_oddr_s));
+    ODDR #(
+      .DDR_CLK_EDGE (IDDR_CLK_EDGE)
+    ) i_tx_data_oddr (
+      .CE (1'b1),
+      .R (1'b0),
+      .S (1'b0),
+      .C (tx_clk),
+      .D1 (tx_data_p),
+      .D2 (tx_data_n),
+      .Q (tx_data_oddr_s));
   end
   endgenerate
 
@@ -201,29 +201,29 @@ module ad_data_out #(
 
   generate
   if (IODELAY_FPGA_TECHNOLOGY == SEVEN_SERIES && IODELAY_ENABLE == 1) begin
-  (* IODELAY_GROUP = IODELAY_GROUP *)
-  ODELAYE2 #(
-    .CINVCTRL_SEL ("FALSE"),
-    .DELAY_SRC ("ODATAIN"),
-    .HIGH_PERFORMANCE_MODE ("FALSE"),
-    .ODELAY_TYPE (ODELAY_TYPE),
-    .ODELAY_VALUE (0),
-    .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
-    .PIPE_SEL ("FALSE"),
-    .SIGNAL_PATTERN ("DATA")
-  ) i_tx_data_odelay (
-    .CE (1'b0),
-    .CLKIN (1'b0),
-    .INC (1'b0),
-    .LDPIPEEN (1'b0),
-    .CINVCTRL (1'b0),
-    .REGRST (1'b0),
-    .C (up_clk),
-    .ODATAIN (tx_data_oddr_s),
-    .DATAOUT (tx_data_odelay_s),
-    .LD (up_dld),
-    .CNTVALUEIN (up_dwdata),
-    .CNTVALUEOUT (up_drdata));
+    (* IODELAY_GROUP = IODELAY_GROUP *)
+    ODELAYE2 #(
+      .CINVCTRL_SEL ("FALSE"),
+      .DELAY_SRC ("ODATAIN"),
+      .HIGH_PERFORMANCE_MODE ("FALSE"),
+      .ODELAY_TYPE (ODELAY_TYPE),
+      .ODELAY_VALUE (0),
+      .REFCLK_FREQUENCY (REFCLK_FREQUENCY),
+      .PIPE_SEL ("FALSE"),
+      .SIGNAL_PATTERN ("DATA")
+    ) i_tx_data_odelay (
+      .CE (1'b0),
+      .CLKIN (1'b0),
+      .INC (1'b0),
+      .LDPIPEEN (1'b0),
+      .CINVCTRL (1'b0),
+      .REGRST (1'b0),
+      .C (up_clk),
+      .ODATAIN (tx_data_oddr_s),
+      .DATAOUT (tx_data_odelay_s),
+      .LD (up_dld),
+      .CNTVALUEIN (up_dwdata),
+      .CNTVALUEOUT (up_drdata));
   end
   endgenerate
 
@@ -263,15 +263,15 @@ module ad_data_out #(
 
   generate
   if (SINGLE_ENDED == 1) begin
-  assign tx_data_out_n = 1'b0;
-  OBUF i_tx_data_obuf (
-    .I (tx_data_odelay_s),
-    .O (tx_data_out_p));
+    assign tx_data_out_n = 1'b0;
+    OBUF i_tx_data_obuf (
+      .I (tx_data_odelay_s),
+      .O (tx_data_out_p));
   end else begin
-  OBUFDS i_tx_data_obuf (
-    .I (tx_data_odelay_s),
-    .O (tx_data_out_p),
-    .OB (tx_data_out_n));
+    OBUFDS i_tx_data_obuf (
+      .I (tx_data_odelay_s),
+      .O (tx_data_out_p),
+      .OB (tx_data_out_n));
   end
   endgenerate
 
