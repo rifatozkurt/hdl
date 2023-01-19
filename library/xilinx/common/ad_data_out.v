@@ -46,7 +46,7 @@ module ad_data_out #(
   parameter   DELAY_FORMAT = "COUNT",
   parameter   US_DELAY_TYPE = "VAR_LOAD",
   // for all
-  parameter   IODELAY_ENABLE = 0,
+  parameter   IODELAY_ENABLE = 1,
   parameter   IODELAY_CTRL = 0,
   parameter   IODELAY_GROUP = "dev_if_delay_group",
   parameter   REFCLK_FREQUENCY = 200
