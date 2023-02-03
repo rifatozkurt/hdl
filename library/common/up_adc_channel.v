@@ -90,6 +90,7 @@ module up_adc_channel #(
   input   [ 7:0]  adc_usr_datatype_bits,
   input   [15:0]  adc_usr_decimation_m,
   input   [15:0]  adc_usr_decimation_n,
+  output  [ 2:0]  up_usr_softspan,
 
   // bus interface
 
@@ -140,6 +141,7 @@ module up_adc_channel #(
   reg     [15:0]  up_adc_iqcor_coeff_tc_2 = 'd0;
   reg     [ 3:0]  up_adc_pnseq_sel_m = 'd0;
   reg     [ 3:0]  up_adc_data_sel_m = 'd0;
+  reg     [ 2:0]  up_usr_softspan_int = 3'h7;
 
   // internal signals
 
@@ -179,6 +181,7 @@ module up_adc_channel #(
   assign up_usr_datatype_bits = up_usr_datatype_bits_int;
   assign up_usr_decimation_m = up_usr_decimation_m_int;
   assign up_usr_decimation_n = up_usr_decimation_n_int;
+  assign up_usr_softspan = up_usr_softspan_int;
 
   // decode block select
 
@@ -363,6 +366,7 @@ module up_adc_channel #(
     up_usr_datatype_bits_int <= 'd0;
     up_usr_decimation_m_int <= 'd0;
     up_usr_decimation_n_int <= 'd0;
+    up_usr_softspan_int <= 3'h7;
   end
   end else begin
   always @(posedge up_clk) begin
@@ -374,6 +378,7 @@ module up_adc_channel #(
       up_usr_datatype_bits_int <= 'd0;
       up_usr_decimation_m_int <= 'd0;
       up_usr_decimation_n_int <= 'd0;
+      up_usr_softspan_int <= 3'h7;
     end else begin
       if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'h8)) begin
         up_usr_datatype_be_int <= up_wdata[25];
@@ -385,6 +390,9 @@ module up_adc_channel #(
       if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'h9)) begin
         up_usr_decimation_m_int <= up_wdata[31:16];
         up_usr_decimation_n_int <= up_wdata[15:0];
+      end
+      if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'hA)) begin
+        up_usr_softspan_int <= up_wdata[2:0];
       end
     end
   end
@@ -417,6 +425,7 @@ module up_adc_channel #(
                                   adc_usr_datatype_shift, adc_usr_datatype_total_bits,
                                   adc_usr_datatype_bits};
           4'h9: up_rdata_int <= { adc_usr_decimation_m, adc_usr_decimation_n};
+          4'hA: up_rdata_int <= { 29'd0, up_usr_softspan_int};
           default: up_rdata_int <= 0;
         endcase
       end else begin
