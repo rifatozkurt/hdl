@@ -941,7 +941,7 @@ ENDREG
 FIELD
 [31:3] 0x00000000
 RESERVED[28:0]
-RW
+RO
 Reserved for backward compatibility.
 ENDFIELD
 
