@@ -69,11 +69,11 @@ module up_adc_channel #(
   input   [31:0]  adc_read_data,
   input   [ 7:0]  adc_status_header,
   input           adc_crc_err,
+  output  [ 2:0]  adc_softspan,
   output          up_adc_crc_err,
   output          up_adc_pn_err,
   output          up_adc_pn_oos,
   output          up_adc_or,
-  output  [ 2:0]  adc_softspan,
 
   // user controls
 
