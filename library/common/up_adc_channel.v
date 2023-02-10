@@ -73,6 +73,7 @@ module up_adc_channel #(
   output          up_adc_pn_err,
   output          up_adc_pn_oos,
   output          up_adc_or,
+  output  [ 2:0]  adc_softspan,
 
   // user controls
 
@@ -90,7 +91,6 @@ module up_adc_channel #(
   input   [ 7:0]  adc_usr_datatype_bits,
   input   [15:0]  adc_usr_decimation_m,
   input   [15:0]  adc_usr_decimation_n,
-  output  [ 2:0]  up_usr_softspan,
 
   // bus interface
 
@@ -141,7 +141,7 @@ module up_adc_channel #(
   reg     [15:0]  up_adc_iqcor_coeff_tc_2 = 'd0;
   reg     [ 3:0]  up_adc_pnseq_sel_m = 'd0;
   reg     [ 3:0]  up_adc_data_sel_m = 'd0;
-  reg     [ 2:0]  up_usr_softspan_int = 3'h7;
+  reg     [ 2:0]  up_adc_softspan_int = 3'h7;
 
   // internal signals
 
@@ -153,6 +153,7 @@ module up_adc_channel #(
   wire            up_adc_or_s;
   wire    [31:0]  up_adc_read_data_s;
   wire    [ 7:0]  up_adc_status_header_s;
+  wire    [ 2:0]  up_adc_softspan_s;
 
   // 2's complement function
 
@@ -181,7 +182,7 @@ module up_adc_channel #(
   assign up_usr_datatype_bits = up_usr_datatype_bits_int;
   assign up_usr_decimation_m = up_usr_decimation_m_int;
   assign up_usr_decimation_n = up_usr_decimation_n_int;
-  assign up_usr_softspan = up_usr_softspan_int;
+  assign up_adc_softspan_s = up_adc_softspan_int;
 
   // decode block select
 
@@ -366,7 +367,6 @@ module up_adc_channel #(
     up_usr_datatype_bits_int <= 'd0;
     up_usr_decimation_m_int <= 'd0;
     up_usr_decimation_n_int <= 'd0;
-    up_usr_softspan_int <= 3'h7;
   end
   end else begin
   always @(posedge up_clk) begin
@@ -378,7 +378,6 @@ module up_adc_channel #(
       up_usr_datatype_bits_int <= 'd0;
       up_usr_decimation_m_int <= 'd0;
       up_usr_decimation_n_int <= 'd0;
-      up_usr_softspan_int <= 3'h7;
     end else begin
       if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'h8)) begin
         up_usr_datatype_be_int <= up_wdata[25];
@@ -391,13 +390,20 @@ module up_adc_channel #(
         up_usr_decimation_m_int <= up_wdata[31:16];
         up_usr_decimation_n_int <= up_wdata[15:0];
       end
-      if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'hA)) begin
-        up_usr_softspan_int <= up_wdata[2:0];
-      end
     end
   end
   end
   endgenerate
+
+  always @(posedge up_clk) begin
+    if (up_rstn == 0) begin
+      up_adc_softspan_int <= 3'd7;
+    end else begin
+      if ((up_wreq_s == 1'b1) && (up_waddr[3:0] == 4'hA)) begin
+        up_adc_softspan_int <= up_wdata[2:0];
+      end
+    end
+  end
 
   // processor read interface
 
@@ -425,7 +431,7 @@ module up_adc_channel #(
                                   adc_usr_datatype_shift, adc_usr_datatype_total_bits,
                                   adc_usr_datatype_bits};
           4'h9: up_rdata_int <= { adc_usr_decimation_m, adc_usr_decimation_n};
-          4'hA: up_rdata_int <= { 29'd0, up_usr_softspan_int};
+          4'hA: up_rdata_int <= { 29'd0, up_adc_softspan_int};
           default: up_rdata_int <= 0;
         endcase
       end else begin
@@ -469,7 +475,7 @@ module up_adc_channel #(
   // adc control & status
 
   up_xfer_cntrl #(
-    .DATA_WIDTH(78)
+    .DATA_WIDTH(81)
   ) i_xfer_cntrl (
     .up_rstn (up_rstn),
     .up_clk (up_clk),
@@ -484,7 +490,8 @@ module up_adc_channel #(
                       up_adc_iqcor_coeff_tc_1,
                       up_adc_iqcor_coeff_tc_2,
                       up_adc_pnseq_sel_m,
-                      up_adc_data_sel_m}),
+                      up_adc_data_sel_m,
+                      up_adc_softspan_s}),
     .up_xfer_done (),
     .d_rst (adc_rst),
     .d_clk (adc_clk),
@@ -499,7 +506,8 @@ module up_adc_channel #(
                       adc_iqcor_coeff_1,
                       adc_iqcor_coeff_2,
                       adc_pnseq_sel,
-                      adc_data_sel}));
+                      adc_data_sel,
+                      adc_softspan}));
 
   up_xfer_status #(
     .DATA_WIDTH(44)
