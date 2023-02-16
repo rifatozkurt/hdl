@@ -37,8 +37,6 @@
 
 module axi_ad4858_cmos #(
 
-  parameter OVERSMP_ENABLE = 0,
-  parameter PACKET_FORMAT = 1,
   parameter ACTIVE_LANE = 8'b11111111
 ) (
 
@@ -55,33 +53,23 @@ module axi_ad4858_cmos #(
   input                   busy,
   input                   cnvs,
 
-  // FIFO interface
+  // format
 
-  output      [ 7:0]      adc_or,
-  output      [ 7:0]      adc_crc_err,
-  output      [ 2:0]      adc_ch0_id,
-  output      [ 2:0]      adc_ch1_id,
-  output      [ 2:0]      adc_ch2_id,
-  output      [ 2:0]      adc_ch3_id,
-  output      [ 2:0]      adc_ch4_id,
-  output      [ 2:0]      adc_ch5_id,
-  output      [ 2:0]      adc_ch6_id,
-  output      [ 2:0]      adc_ch7_id,
-  output      [23:0]      adc_data_0,
-  output      [23:0]      adc_data_1,
-  output      [23:0]      adc_data_2,
-  output      [23:0]      adc_data_3,
-  output      [23:0]      adc_data_4,
-  output      [23:0]      adc_data_5,
-  output      [23:0]      adc_data_6,
-  output      [23:0]      adc_data_7,
+  input       [ 1:0]      packet_format,
+  input                   oversampling_en,
+
+  // channel interface
+
+  output     [255:0]      adc_data,
   output reg              adc_valid
 );
 
   localparam NEG_EDGE = 1;
-  localparam DW = (PACKET_FORMAT == 0) ? 20 :
-                  (PACKET_FORMAT == 1) ? 24 : 32;
+  localparam DW = 32;
   localparam BW = DW - 1;
+  localparam PACKET_1_BITS = 20;
+  localparam PACKET_2_BITS = 24;
+  localparam PACKET_3_BITS = 32;
 
   // internal registers
 
@@ -95,9 +83,8 @@ module axi_ad4858_cmos #(
   reg         [BW:0]  adc_lane_7;
 
   reg         [15:0]  crc_data = 16'b0;
-  reg         [ 4:0]  data_counter = 5'h0;
-  reg         [ 4:0]  scki_counter = 5'h0;
-  reg         [ 4:0]  req_packets = 5'h0;
+  reg         [ 5:0]  data_counter = 6'h0;
+  reg         [ 5:0]  scki_counter = 6'h0;
 
   reg                 scki_i;
   reg                 scki_d;
@@ -149,37 +136,37 @@ module axi_ad4858_cmos #(
   reg         [31:0]  busy_conversion_cnt;
   reg         [31:0]  busy_measure_value;
   reg                 busy_measure_valid;
+  reg                 start_transfer;
 
   // internal wires
 
-  wire        [23:0]  adc_data_s[7:0];
-  wire        [ 2:0]  adc_ch_id_s[7:0];
-  wire        [15:0]  adc_crc_data;
+  wire        [31:0]  status_and_crc_data;
 
-  wire                start_transfer_s;
   wire                aquire_data;
   wire                scki_cnt_rst;
   wire                adc_cnvs_redge;
   wire                conversion_completed;
   wire                conversion_quiet_time_s;
 
+  wire        [ 5:0]  packet_lenght;
+
+  // packet format selection
+
+  assign packet_lenght = packet_format == 2'd0 ? 6'd20 :
+                         packet_format == 2'd1 ? 6'd24 :
+                         packet_format == 2'd2 ? 6'd32 : 6'd20;
+
   // instantiations
 
-  ad_edge_detect #(
-    .EDGE(NEG_EDGE)
-  ) i_ad_edge_detect (
-    .clk (clk),
-    .rst (rst),
-    .signal_in (busy),
-    .signal_out (start_transfer_s));
-
-  always @(posedge clk) begin
+ always @(posedge clk) begin
     if (rst == 1'b1) begin
       busy_m1 <= 1'b0;
       busy_m2 <= 1'b0;
+      start_transfer <= 1'b0;
     end else begin
       busy_m1 <= busy;
       busy_m2 <= busy_m1;
+      start_transfer <= busy_m2 & !busy_m1;
     end
   end
 
@@ -219,13 +206,13 @@ module axi_ad4858_cmos #(
     end else begin
       if (cnvs == 1'b1 && busy_m2 == 1'b1) begin
         run_busy_period_cnt <= 1'b1;
-      end else if (start_transfer_s == 1'b1) begin
+      end else if (start_transfer == 1'b1) begin
         run_busy_period_cnt <= 1'b0;
       end
 
       if (adc_cnvs_redge == 1'b1) begin
         busy_conversion_cnt <= 'd0;
-      end else if (start_transfer_s == 1'b1) begin
+      end else if (start_transfer == 1'b1) begin
         busy_measure_value <= busy_conversion_cnt;
         busy_measure_valid <= 1'b1;
       end else if (run_busy_period_cnt == 1'b1) begin
@@ -241,7 +228,7 @@ module axi_ad4858_cmos #(
       conversion_quiet_time <= 1'b0;
     end else begin
       cnvs_d <= cnvs;
-      if (OVERSMP_ENABLE == 1 && adc_cnvs_redge == 1'b1) begin
+      if (oversampling_en == 1 && adc_cnvs_redge == 1'b1) begin
         conversion_quiet_time <= 1'b1;
       end else begin
         conversion_quiet_time <= conversion_quiet_time & ~conversion_completed;
@@ -254,10 +241,10 @@ module axi_ad4858_cmos #(
     end
   end
 
-  assign conversion_quiet_time_s = (OVERSMP_ENABLE == 1) ? conversion_quiet_time | cnvs : 1'b0;
+  assign conversion_quiet_time_s = (oversampling_en == 1) ? conversion_quiet_time | cnvs : 1'b0;
   assign conversion_completed = (period_cnt == busy_measure_value) ? 1'b1 : 1'b0;
   assign adc_cnvs_redge = ~cnvs_d & cnvs;
-  assign scki_cnt_rst = (scki_counter == DW) ? 1'b1 : 1'b0;
+  assign scki_cnt_rst = (scki_counter == packet_lenght) ? 1'b1 : 1'b0;
   assign scki = scki_i | ~aquire_data;
 
   /*
@@ -270,7 +257,7 @@ module axi_ad4858_cmos #(
   */
 
   always @(posedge clk) begin
-    if (start_transfer_s) begin
+    if (start_transfer) begin
       lane_0_data <= 4'd0;
       lane_1_data <= 4'd1;
       lane_2_data <= 4'd2;
@@ -321,8 +308,10 @@ module axi_ad4858_cmos #(
                          (ch_data_lock[8] | ~adc_crc_enable));
 
   // capture data
+  // the most significant bits of the adc_lane_x will remaind from the
+  // previous sample for packet formats other than 32.
 
-  always @(posedge scko) begin
+  always @(negedge scko) begin
     adc_lane_0 <= {adc_lane_0[BW-1:0], db_i[0]};
     adc_lane_1 <= {adc_lane_1[BW-1:0], db_i[1]};
     adc_lane_2 <= {adc_lane_2[BW-1:0], db_i[2]};
@@ -340,7 +329,7 @@ module axi_ad4858_cmos #(
     if (rst == 1'b1) begin
       adc_valid_init <= 1'b0;
     end else begin
-      if (data_counter == DW && adc_valid_init == 1'b0) begin
+      if (data_counter == packet_lenght && adc_valid_init == 1'b0) begin
         adc_valid_init <= 1'b1;
       end else begin
         adc_valid_init <= 1'b0;
@@ -361,7 +350,7 @@ module axi_ad4858_cmos #(
       data_counter <= 'h0;
     end else begin
       data_counter <= scki_counter;
-      if (data_counter == DW) begin
+      if (data_counter == packet_lenght) begin
         adc_data_init[0] <= adc_lane_0;
         adc_data_init[1] <= adc_lane_1;
         adc_data_init[2] <= adc_lane_2;
@@ -454,88 +443,44 @@ module axi_ad4858_cmos #(
     end else begin
       if (!adc_valid_init_d2 & adc_valid_init) begin
         if (adc_ch0_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch0_shift_d[2:0]] <= adc_data_init[0];
+          adc_data_store[adc_ch0_shift_d[3:0]] <= adc_data_init[0];
         end
         if (adc_ch1_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch1_shift_d[2:0]] <= adc_data_init[1];
+          adc_data_store[adc_ch1_shift_d[3:0]] <= adc_data_init[1];
         end
         if (adc_ch2_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch2_shift_d[2:0]] <= adc_data_init[2];
+          adc_data_store[adc_ch2_shift_d[3:0]] <= adc_data_init[2];
         end
         if (adc_ch3_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch3_shift_d[2:0]] <= adc_data_init[3];
+          adc_data_store[adc_ch3_shift_d[3:0]] <= adc_data_init[3];
         end
         if (adc_ch4_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch4_shift_d[2:0]] <= adc_data_init[4];
+          adc_data_store[adc_ch4_shift_d[3:0]] <= adc_data_init[4];
         end
         if (adc_ch5_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch5_shift_d[2:0]] <= adc_data_init[5];
+          adc_data_store[adc_ch5_shift_d[3:0]] <= adc_data_init[5];
         end
         if (adc_ch6_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch6_shift_d[2:0]] <= adc_data_init[6];
+          adc_data_store[adc_ch6_shift_d[3:0]] <= adc_data_init[6];
         end
         if (adc_ch7_shift_d[4] == 1'b1) begin
-          adc_data_store[adc_ch7_shift_d[2:0]] <= adc_data_init[7];
+          adc_data_store[adc_ch7_shift_d[3:0]] <= adc_data_init[7];
         end
       end
     end
   end
 
-  genvar i;
-  generate
+  // to be extracted
+  assign status_and_crc_data = adc_data_store[8][15:0];
 
-    for (i=0; i < 8; i=i+1) begin: format
-      assign adc_crc_err[i] = 1'b0;// CRC feature - do be done
-      if (PACKET_FORMAT == 0) begin
-        assign adc_data_s[i] = {4'd0, adc_data_store[i]};
-        assign adc_or[i] = 1'b0;
-        assign adc_ch_id_s[i] = 3'd0;
-      end else if (PACKET_FORMAT == 1) begin
-        if (OVERSMP_ENABLE == 0) begin
-          assign adc_data_s[i] = {4'd0, adc_data_store[i][23:4]};
-          assign adc_or[i] = adc_data_store[i][3];
-          assign adc_ch_id_s[i] = adc_data_store[i][2:0];
-        end else if (OVERSMP_ENABLE == 1) begin
-          assign adc_data_s[i] = adc_data_store[i][23:0];
-          assign adc_or[i] = 3'd0;
-          assign adc_ch_id_s[i] = 3'd0;
-        end
-      end else begin
-        if (OVERSMP_ENABLE == 0) begin
-          assign adc_data_s[i] = {4'd0, adc_data_store[i][31:12]};
-          assign adc_or[i] = adc_data_store[i][11];
-          assign adc_ch_id_s[i] = adc_data_store[i][10:7];
-          // soft_span[i] = adc_data_store[i] [7:4] to be added
-        end else if (OVERSMP_ENABLE == 1) begin
-          assign adc_data_s[i] = adc_data_store[i][31:8];
-          assign adc_or[i] = adc_data_store[i][7];
-          assign adc_ch_id_s[i] = adc_data_store[i][6:4];
-          // soft_span[i] = adc_data_store[i] [3:0] to be added
-        end
-      end
-    end
-
-    assign adc_crc_data = adc_data_store[8][15:0];
-
-  endgenerate
-
-  assign adc_data_0 = adc_data_s[0];
-  assign adc_data_1 = adc_data_s[1];
-  assign adc_data_2 = adc_data_s[2];
-  assign adc_data_3 = adc_data_s[3];
-  assign adc_data_4 = adc_data_s[4];
-  assign adc_data_5 = adc_data_s[5];
-  assign adc_data_6 = adc_data_s[6];
-  assign adc_data_7 = adc_data_s[7];
-
-  assign adc_ch0_id = adc_ch_id_s[0];
-  assign adc_ch1_id = adc_ch_id_s[1];
-  assign adc_ch2_id = adc_ch_id_s[2];
-  assign adc_ch3_id = adc_ch_id_s[3];
-  assign adc_ch4_id = adc_ch_id_s[4];
-  assign adc_ch5_id = adc_ch_id_s[5];
-  assign adc_ch6_id = adc_ch_id_s[6];
-  assign adc_ch7_id = adc_ch_id_s[7];
+  assign adc_data = {adc_data_store[7],
+                     adc_data_store[6],
+                     adc_data_store[5],
+                     adc_data_store[4],
+                     adc_data_store[3],
+                     adc_data_store[2],
+                     adc_data_store[1],
+                     adc_data_store[0]};
 
 endmodule
 

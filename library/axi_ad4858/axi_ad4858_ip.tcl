@@ -9,6 +9,7 @@ global VIVADO_IP_LIBRARY
 adi_ip_create axi_ad4858
 adi_ip_files axi_ad4858 [list \
     "$ad_hdl_dir/library/common/ad_edge_detect.v" \
+    "$ad_hdl_dir/library/common/ad_datafmt.v" \
     "$ad_hdl_dir/library/common/up_axi.v" \
     "$ad_hdl_dir/library/common/ad_rst.v" \
     "$ad_hdl_dir/library/common/up_adc_common.v" \
@@ -27,6 +28,7 @@ adi_ip_files axi_ad4858 [list \
     "$ad_hdl_dir/library/util_cdc/sync_event.v" \
     "axi_ad4858_tb.v" \
     "axi_ad4858_cmos.v" \
+    "axi_ad4858_channel.v" \
     "axi_ad4858_lvds.v" \
     "axi_ad4858.v" ]
 
@@ -117,26 +119,6 @@ adi_set_ports_dependency "sdo_p" \
   "(spirit:decode(id('MODELPARAM_VALUE.LVDS_CMOS_N')) == 1)"
 adi_set_ports_dependency "sdo_n" \
   "(spirit:decode(id('MODELPARAM_VALUE.LVDS_CMOS_N')) == 1)"
-
-ipgui::add_param -name "OVERSMP_ENABLE" -component $cc -parent $page0
-set_property -dict [list \
-  "display_name" "OVERSAMPLING" \
-  "tooltip" "The received data packets are processed as oversampled " \
-  "widget" "checkBox" \
-] [ipgui::get_guiparamspec -name "OVERSMP_ENABLE" -component $cc]
-
-ipgui::add_param -name "PACKET_FORMAT" -component $cc -parent $page0
-set_property -dict [list \
-  "display_name" "PACKET_FORMAT" \
-  "tooltip" "Packet format 0 = 20 bits, 1 = 24 bits, 2 or 3 = 32 bits" \
-] [ipgui::get_guiparamspec -name "PACKET_FORMAT" -component $cc]
-
-set_property -dict [list \
-  "value_validation_type" "range_long" \
-  "value_validation_range_minimum" "0" \
-  "value_validation_range_maximum" "3" \
- ] \
-[ipx::get_user_parameters "PACKET_FORMAT" -of_objects $cc]
 
 adi_set_ports_dependency "external_clk" \
   "(spirit:decode(id('MODELPARAM_VALUE.EXTERNAL_CLK')) = 1)" 0

@@ -38,8 +38,6 @@
 module axi_ad4858_lvds #(
 
   parameter FPGA_TECHNOLOGY = 0,
-  parameter OVERSMP_ENABLE = 0,
-  parameter PACKET_FORMAT = 1,
   parameter IODELAY_GROUP = "dev_if_delay_group",
   parameter NEG_EDGE = 1
 ) (
@@ -72,26 +70,14 @@ module axi_ad4858_lvds #(
   input                   busy,
   input                   cnvs,
 
-  // FIFO interface
+  // format
 
-  output      [ 7:0]      adc_or,
-  output      [ 7:0]      adc_crc_err,
-  output      [ 2:0]      adc_ch0_id,
-  output      [ 2:0]      adc_ch1_id,
-  output      [ 2:0]      adc_ch2_id,
-  output      [ 2:0]      adc_ch3_id,
-  output      [ 2:0]      adc_ch4_id,
-  output      [ 2:0]      adc_ch5_id,
-  output      [ 2:0]      adc_ch6_id,
-  output      [ 2:0]      adc_ch7_id,
-  output  reg [23:0]      adc_data_0,
-  output  reg [23:0]      adc_data_1,
-  output  reg [23:0]      adc_data_2,
-  output  reg [23:0]      adc_data_3,
-  output  reg [23:0]      adc_data_4,
-  output  reg [23:0]      adc_data_5,
-  output  reg [23:0]      adc_data_6,
-  output  reg [23:0]      adc_data_7,
+  input       [ 1:0]      packet_format,
+  input                   oversampling_en,
+
+  // channel interface
+
+  output     [255:0]      adc_data,
   output  reg             adc_valid,
 
   // delay interface (for IDELAY macros)
@@ -107,20 +93,17 @@ module axi_ad4858_lvds #(
   localparam  ULTRASCALE = 2;
   localparam  ULTRASCALE_PLUS = 3;
 
-  localparam DW = (PACKET_FORMAT == 0) ? 20 :
-                  (PACKET_FORMAT == 1) ? 24 : 32;
+  localparam DW = 32;
   localparam BW = DW - 1;
 
   // internal registers
 
   reg         [BW:0]  rx_data = 'h0;
-  reg         [15:0]  crc_data = 'h0;
-  reg         [ 8:0]  data_counter_m2 = 'h0;
-  reg         [ 8:0]  data_counter_m1 = 'h0;
-  reg         [ 8:0]  data_counter = 'h0;
-  reg         [ 8:0]  scki_counter = 'h0;
+  reg         [ 5:0]  data_counter_m2 = 'h0;
+  reg         [ 5:0]  data_counter_m1 = 'h0;
+  reg         [ 5:0]  data_counter = 'h0;
+  reg         [ 5:0]  scki_counter = 'h0;
   reg         [ 3:0]  ch_counter = 'h0;
-  reg         [ 4:0]  req_packets = 5'h0;
   reg                 new_data = 1'b0;
 
   reg                 scki_i;
@@ -138,33 +121,44 @@ module axi_ad4858_lvds #(
   reg                 busy_measure_valid;
   reg                 ch_valid;
 
-  reg                 adc_valid_init;
-  reg                 adc_valid_d;
+  reg         [31:0]  adc_data_store[8:0];
   reg                 active_transfer;
   reg         [ 3:0]  max_channel_transfer = 8 -1;
   reg         [ 8:0]  data_packets = 9'd24 - 4;
   reg         [ 3:0]  if_data_d;
   reg         [ 3:0]  if_data_d_bits;
   reg         [ 3:0]  if_valid_data;
+  reg                 start_transfer;
 
   // internal wires
 
   wire        [ 8:0]  bursts = 24*8-1;
-  wire                start_transfer_s;
   wire        [ 3:0]  if_data;
   wire        [ 3:0]  clk_data;
   wire        [ 7:0]  double_if_data_d;
   wire        [ 3:0]  if_data_reoder;
+  wire        [15:0]  crc_data;
+  wire        [ 5:0]  packet_lenght;
+
+  // packet format selection
+
+  assign packet_lenght = packet_format == 2'd0 ? 6'd20 :
+                         packet_format == 2'd1 ? 6'd24 :
+                         packet_format == 2'd2 ? 6'd32 : 6'd20;
 
   // instantiations
 
-  ad_edge_detect #(
-    .EDGE(NEG_EDGE)
-  ) i_ad_edge_detect (
-    .clk (clk),
-    .rst (rst),
-    .signal_in (busy),
-    .signal_out (start_transfer_s));
+  always @(posedge clk) begin
+    if (rst == 1'b1) begin
+      busy_m1 <= 1'b0;
+      busy_m2 <= 1'b0;
+      start_transfer <= 1'b0;
+    end else begin
+      busy_m1 <= busy;
+      busy_m2 <= busy_m1;
+      start_transfer <= busy_m2 & !busy_m1;
+    end
+  end
 
   // busy period counter
   always @(posedge clk) begin
@@ -176,13 +170,13 @@ module axi_ad4858_lvds #(
     end else begin
       if (cnvs == 1'b1 && busy_m2 == 1'b1) begin
         run_busy_period_cnt <= 1'b1;
-      end else if (start_transfer_s == 1'b1) begin
+      end else if (start_transfer == 1'b1) begin
         run_busy_period_cnt <= 1'b0;
       end
 
       if (adc_cnvs_redge == 1'b1) begin
         busy_conversion_cnt <= 'd0;
-      end else if (start_transfer_s == 1'b1) begin
+      end else if (start_transfer == 1'b1) begin
         busy_measure_value <= busy_conversion_cnt;
         busy_measure_valid <= 1'b1;
       end else if (run_busy_period_cnt == 1'b1) begin
@@ -198,7 +192,7 @@ module axi_ad4858_lvds #(
       conversion_quiet_time <= 1'b0;
     end else begin
       cnvs_d <= cnvs;
-      if (OVERSMP_ENABLE == 1 && adc_cnvs_redge == 1'b1) begin
+      if (oversampling_en == 1 && adc_cnvs_redge == 1'b1) begin
         conversion_quiet_time <= 1'b1;
       end else begin
         conversion_quiet_time <= conversion_quiet_time & ~conversion_completed;
@@ -211,11 +205,10 @@ module axi_ad4858_lvds #(
     end
   end
 
-  assign conversion_quiet_time_s = (OVERSMP_ENABLE == 1) ? conversion_quiet_time | cnvs : 1'b0;
+  assign conversion_quiet_time_s = (oversampling_en == 1) ? conversion_quiet_time | cnvs : 1'b0;
   assign conversion_completed = (period_cnt == busy_measure_value) ? 1'b1 : 1'b0;
   assign adc_cnvs_redge = ~cnvs_d & cnvs;
-  assign scki_cnt_rst = (scki_counter == DW) ? 1'b1 : 1'b0;
-
+  assign scki_cnt_rst = (scki_counter == packet_lenght) ? 1'b1 : 1'b0;
 
   always @(posedge clk) begin
     if (rst == 1'b1) begin
@@ -223,9 +216,6 @@ module axi_ad4858_lvds #(
       ch_counter <= 4'h0;
       ch_valid <= 1'b0;
       active_transfer <= 1'b0;
-      adc_valid_d <= 1'b0;
-      adc_valid_init <= 1'b0;
-
     end else begin
       if (active_transfer == 1'b0 || data_counter == data_packets) begin
         data_counter <= 2'h0;
@@ -253,14 +243,15 @@ module axi_ad4858_lvds #(
 
       if (data_counter == data_packets && ch_counter == max_channel_transfer) begin
         active_transfer <= 1'b0;
-      end else if (active_transfer || start_transfer_s) begin
-        active_transfer <= 1'b1;
+      end else if (active_transfer || start_transfer) begin
+        active_transfer <= ~conversion_quiet_time_s;
       end
     end
   end
 
-  // because the fast and divided clocks used by the iserdes are not source
-  // synchronous bits might end up in two clk periods.
+  // because the fast clocks used by the iserdes is not the echoed clock, but
+  // the clock used to generate the echoed one, bits from a frame might end up
+  // in separate frames delimited by div_clk due to phase differences.
   always @(posedge clk) begin
     if_data_d <= if_data;
     if_valid_data <= |clk_data;
@@ -306,38 +297,22 @@ module axi_ad4858_lvds #(
   // ch_counter_d clock domain crossing constraints
   always @(posedge clk) begin
     if (ch_valid_dn == 1'b1) begin
-      case (ch_index_dn)
-        4'd0 : begin
-          adc_data_0 <= rx_data;
-        end
-        4'd1 : begin
-          adc_data_1 <= rx_data;
-        end
-        4'd2 : begin
-          adc_data_2 <= rx_data;
-        end
-        4'd3 : begin
-          adc_data_3 <= rx_data;
-        end
-        4'd4 : begin
-          adc_data_4 <= rx_data;
-        end
-        4'd5 : begin
-          adc_data_5 <= rx_data;
-        end
-        4'd6 : begin
-          adc_data_6 <= rx_data;
-        end
-        4'd7 : begin
-          adc_data_7 <= rx_data;
-        end
-        4'd8 : begin
-          crc_data <= rx_data[15:0];
-        end
-      endcase
+      adc_data_store[ch_index_dn] <= rx_data;
     end
     adc_valid <= (ch_valid_dn == 1'b1 && ch_index_dn == max_channel_transfer) ? 1'b1 : 1'b0;
   end
+
+  //assign dev_statuts = adc_data_store[8][23:16];
+  //assign dev_statuts = adc_data_store[8][31:24];
+  assign crc_data = adc_data_store[8][15:0];
+  assign adc_data = {adc_data_store[7],
+                     adc_data_store[6],
+                     adc_data_store[5],
+                     adc_data_store[4],
+                     adc_data_store[3],
+                     adc_data_store[2],
+                     adc_data_store[1],
+                     adc_data_store[0]};
 
   // use the echoed clock signal for framing
   ad_serdes_in #(

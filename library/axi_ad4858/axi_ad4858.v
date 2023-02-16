@@ -48,8 +48,6 @@ module axi_ad4858 #(
   parameter       LANE_5_ENABLE = "true",
   parameter       LANE_6_ENABLE = "true",
   parameter       LANE_7_ENABLE = "true",
-  parameter       OVERSMP_ENABLE = 0,
-  parameter       PACKET_FORMAT = 1,
   parameter       ECHO_CLK_EN = 1,
   parameter       EXTERNAL_CLK = 0
 ) (
@@ -178,20 +176,23 @@ module axi_ad4858 #(
 
   wire                    adc_rst_s;
 
-  wire    [ 7:0]          adc_enable;
-  wire    [ 2:0]          adc_status_header[0:7];
+  wire    [ 7:0]          adc_enable_if_s;
+  wire   [255:0]          adc_data_if_s;
+  wire    [ 7:0]          adc_enable_s;
+  wire    [31:0]          adc_data_s[7:0];
+  wire                    adc_valid_if;
+  wire    [ 7:0]          adc_valid_s;
   wire    [ 7:0]          adc_crc_err;
   wire    [ 7:0]          adc_or;
 
-  wire    [23:0]          adc_data_0_s;
-  wire    [23:0]          adc_data_1_s;
-  wire    [23:0]          adc_data_2_s;
-  wire    [23:0]          adc_data_3_s;
-  wire    [23:0]          adc_data_4_s;
-  wire    [23:0]          adc_data_5_s;
-  wire    [23:0]          adc_data_6_s;
-  wire    [23:0]          adc_data_7_s;
-  wire                    adc_crc_enable;
+  wire    [ 7:0]          up_adc_pn_err;
+  wire    [ 7:0]          up_adc_pn_oos;
+
+  wire    [ 7:0]          adc_custom_control;
+  wire    [ 1:0]          packet_format;
+  wire                    oversampling_en;
+
+  wire                    adc_crc_enable_s;
 
   wire    [ 3:0]          order;
   wire    [ 3:0]          delayed_bits;
@@ -212,23 +213,28 @@ module axi_ad4858 #(
 
   assign lvds_cmos_n = LVDS_CMOS_N[0];
 
-  assign adc_enable_0 = adc_enable[0];
-  assign adc_enable_1 = adc_enable[1];
-  assign adc_enable_2 = adc_enable[2];
-  assign adc_enable_3 = adc_enable[3];
-  assign adc_enable_4 = adc_enable[4];
-  assign adc_enable_5 = adc_enable[5];
-  assign adc_enable_6 = adc_enable[6];
-  assign adc_enable_7 = adc_enable[7];
+  assign adc_enable_0 = adc_enable_s[0];
+  assign adc_enable_1 = adc_enable_s[1];
+  assign adc_enable_2 = adc_enable_s[2];
+  assign adc_enable_3 = adc_enable_s[3];
+  assign adc_enable_4 = adc_enable_s[4];
+  assign adc_enable_5 = adc_enable_s[5];
+  assign adc_enable_6 = adc_enable_s[6];
+  assign adc_enable_7 = adc_enable_s[7];
 
-  assign adc_data_0 = {8'd0,adc_data_0_s};
-  assign adc_data_1 = {8'd0,adc_data_1_s};
-  assign adc_data_2 = {8'd0,adc_data_2_s};
-  assign adc_data_3 = {8'd0,adc_data_3_s};
-  assign adc_data_4 = {8'd0,adc_data_4_s};
-  assign adc_data_5 = {8'd0,adc_data_5_s};
-  assign adc_data_6 = {8'd0,adc_data_6_s};
-  assign adc_data_7 = {8'd0,adc_data_7_s};
+  assign adc_valid = adc_valid_s[0];
+
+  assign adc_data_0 = adc_data_s[0];
+  assign adc_data_1 = adc_data_s[1];
+  assign adc_data_2 = adc_data_s[2];
+  assign adc_data_3 = adc_data_s[3];
+  assign adc_data_4 = adc_data_s[4];
+  assign adc_data_5 = adc_data_s[5];
+  assign adc_data_6 = adc_data_s[6];
+  assign adc_data_7 = adc_data_s[7];
+
+  assign packet_format = adc_custom_control[1:0];
+  assign oversampling_en = adc_custom_control[2];
 
   // processor read interface
 
@@ -255,6 +261,7 @@ module axi_ad4858 #(
     end
   end
 
+  genvar i;
   generate
     if (EXTERNAL_CLK == 1'b1) begin
       assign adc_clk_s = external_clk;
@@ -272,15 +279,15 @@ module axi_ad4858 #(
         assign scko_s_n = scki_n;
       end
       axi_ad4858_lvds #(
-        .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY),
-        .OVERSMP_ENABLE (OVERSMP_ENABLE),
-        .PACKET_FORMAT (PACKET_FORMAT))
+        .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY))
       i_ad4858_lvds_interface (
         .rst (adc_rst_s),
         .clk (adc_clk_s),
         .fast_clk (external_fast_clk),
-        .adc_enable (adc_enable),
-        .adc_crc_enable (adc_crc_enable),
+        .adc_enable (adc_enable_s),
+        .adc_crc_enable (adc_crc_enable_s),
+        .packet_format (packet_format),
+        .oversampling_en (oversampling_en),
 
         .delayed_bits (delayed_bits),
         .order (order),
@@ -295,25 +302,8 @@ module axi_ad4858 #(
         .sdo_n (sdo_n),
         .busy (busy),
         .cnvs (cnvs),
-        .adc_or (adc_or),
-        .adc_crc_err (adc_crc_err),
-        .adc_ch0_id (adc_status_header[0]),
-        .adc_ch1_id (adc_status_header[1]),
-        .adc_ch2_id (adc_status_header[2]),
-        .adc_ch3_id (adc_status_header[3]),
-        .adc_ch4_id (adc_status_header[4]),
-        .adc_ch5_id (adc_status_header[5]),
-        .adc_ch6_id (adc_status_header[6]),
-        .adc_ch7_id (adc_status_header[7]),
-        .adc_data_0 (adc_data_0_s),
-        .adc_data_1 (adc_data_1_s),
-        .adc_data_2 (adc_data_2_s),
-        .adc_data_3 (adc_data_3_s),
-        .adc_data_4 (adc_data_4_s),
-        .adc_data_5 (adc_data_5_s),
-        .adc_data_6 (adc_data_6_s),
-        .adc_data_7 (adc_data_7_s),
-        .adc_valid (adc_valid),
+        .adc_data (adc_data_if_s),
+        .adc_valid (adc_valid_if),
         .up_clk (up_clk),
         .up_adc_dld (up_dld),
         .up_adc_dwdata (up_dwdata),
@@ -321,6 +311,28 @@ module axi_ad4858 #(
         .delay_clk (delay_clk),
         .delay_rst (delay_rst),
         .delay_locked (delay_locked));
+
+      up_delay_cntrl #(
+        .DATA_WIDTH(2),
+        .BASE_ADDRESS(6'h02)
+      ) i_delay_cntrl (
+        .delay_clk (delay_clk),
+        .delay_rst (delay_rst),
+        .delay_locked (delay_locked),
+        .up_dld (up_dld),
+        .up_dwdata (up_dwdata),
+        .up_drdata (up_drdata),
+        .up_rstn (up_rstn),
+        .up_clk (up_clk),
+        .up_wreq (up_wreq_s),
+        .up_waddr (up_waddr_s),
+        .up_wdata (up_wdata_s),
+        .up_wack (up_wack_s[9]),
+        .up_rreq (up_rreq),
+        .up_raddr (up_raddr_s),
+        .up_rdata (up_rdata_s[9]),
+        .up_rack (up_rack_s[9]));
+
     end else begin
       assign scki_p = 1'b0;
       assign scki_n = 1'b1;
@@ -330,14 +342,14 @@ module axi_ad4858 #(
         assign scko_s = scki;
       end
       axi_ad4858_cmos #(
-        .OVERSMP_ENABLE (OVERSMP_ENABLE),
-        .PACKET_FORMAT (PACKET_FORMAT),
         .ACTIVE_LANE (ACTIVE_LANES))
       i_ad4858_cmos_interface (
         .rst (adc_rst_s),
         .clk (adc_clk_s),
-        .adc_enable (adc_enable),
-        .adc_crc_enable (adc_crc_enable),
+        .adc_enable (adc_enable_s),
+        .adc_crc_enable (adc_crc_enable_s),
+        .packet_format (packet_format),
+        .oversampling_en (oversampling_en),
         .scki (scki),
         .scko (scko_s),
         .db_i ({lane_7,
@@ -350,72 +362,30 @@ module axi_ad4858 #(
                 lane_0}),
         .busy (busy),
         .cnvs (cnvs),
-        .adc_or (adc_or),
-        .adc_crc_err (adc_crc_err),
-        .adc_ch0_id (adc_status_header[0]),
-        .adc_ch1_id (adc_status_header[1]),
-        .adc_ch2_id (adc_status_header[2]),
-        .adc_ch3_id (adc_status_header[3]),
-        .adc_ch4_id (adc_status_header[4]),
-        .adc_ch5_id (adc_status_header[5]),
-        .adc_ch6_id (adc_status_header[6]),
-        .adc_ch7_id (adc_status_header[7]),
-        .adc_data_0 (adc_data_0_s),
-        .adc_data_1 (adc_data_1_s),
-        .adc_data_2 (adc_data_2_s),
-        .adc_data_3 (adc_data_3_s),
-        .adc_data_4 (adc_data_4_s),
-        .adc_data_5 (adc_data_5_s),
-        .adc_data_6 (adc_data_6_s),
-        .adc_data_7 (adc_data_7_s),
-        .adc_valid (adc_valid));
-   end
-  endgenerate
+        .adc_data (adc_data_if_s),
+        .adc_valid (adc_valid_if));
+    end
 
-  // regmap adc channels
+    // adc channels
 
-  generate
-    genvar i;
-    for (i = 0; i < 8; i=i+1) begin : regmap_channels
-      up_adc_channel #(
+    for (i = 0; i < 8; i=i+1) begin : channel
+      axi_ad4858_channel #(
         .CHANNEL_ID(i)
-      ) i_up_adc_channel (
+      ) i_adc_channel (
         .adc_clk (adc_clk_s),
         .adc_rst (adc_rst_s),
-        .adc_enable (adc_enable[i]),
-        .adc_iqcor_enb (),
-        .adc_dcfilt_enb (),
-        .adc_dfmt_se (),
-        .adc_dfmt_type (),
-        .adc_dfmt_enable (),
-        .adc_dcfilt_offset (),
-        .adc_dcfilt_coeff (),
-        .adc_iqcor_coeff_1 (),
-        .adc_iqcor_coeff_2 (),
-        .adc_pnseq_sel (),
-        .adc_data_sel (),
-        .adc_pn_err (1'b0),
-        .adc_pn_oos (1'b0),
+        .adc_ch_valid_in (adc_valid_if),
+        .adc_ch_data_in (adc_data_if_s[32*i+:32]),
+        .adc_enable (adc_enable_s[i]),
+        .adc_valid (adc_valid_s[i]),
+        .adc_data (adc_data_s[i]),
         .adc_or (adc_or[i]),
-        .adc_status_header({5'd0, adc_status_header[i]}),
-        .adc_crc_err(adc_crc_err[i]),
-        .up_adc_pn_err (),
-        .up_adc_pn_oos (),
+        .adc_status_header (),
+        .packet_format (packet_format),
+        .oversampling_en (oversampling_en),
         .up_adc_or (up_adc_or_s[i]),
-        .up_usr_datatype_be (),
-        .up_usr_datatype_signed (),
-        .up_usr_datatype_shift (),
-        .up_usr_datatype_total_bits (),
-        .up_usr_datatype_bits (),
-        .up_usr_decimation_m (),
-        .up_usr_decimation_n (),
-        .adc_usr_datatype_be (1'b0),
-        .adc_usr_datatype_signed (1'b1),
-        .adc_usr_datatype_shift (8'd0),
-        .adc_usr_datatype_total_bits (8'd32),
-        .adc_usr_datatype_bits (8'd32),
-        .adc_usr_decimation_m (16'd1),
-        .adc_usr_decimation_n (16'd1),
+        .up_adc_pn_err (up_adc_pn_err[i]),
+        .up_adc_pn_oos (up_adc_pn_oos[i]),
         .up_rstn (up_rstn),
         .up_clk (up_clk),
         .up_wreq (up_wreq_s),
@@ -450,19 +420,19 @@ module axi_ad4858 #(
     .adc_ext_sync_arm(),
     .adc_ext_sync_disarm(),
     .adc_ext_sync_manual_req(),
-    .adc_custom_control(),
+    .adc_custom_control(adc_custom_control),
     .adc_sdr_ddr_n(),
     .adc_symb_op(),
     .adc_symb_8_16b(),
     .adc_num_lanes(),
-    .adc_crc_enable(adc_crc_enable),
+    .adc_crc_enable(adc_crc_enable_s),
     .up_pps_rcounter (32'b0),
     .up_pps_status (1'b0),
     .up_pps_irq_mask (),
     .up_adc_ce (),
-    .up_status_pn_err (1'b0),
-    .up_status_pn_oos (1'b0),
-    .up_status_or (up_status_or),
+    .up_status_pn_err (|up_adc_pn_err),
+    .up_status_pn_oos (|up_adc_pn_oos),
+    .up_status_or (|up_status_or),
     .up_adc_r1_mode(),
     .up_drp_sel (),
     .up_drp_wr (),
@@ -471,9 +441,12 @@ module axi_ad4858 #(
     .up_drp_rdata (32'd0),
     .up_drp_ready (1'd0),
     .up_drp_locked (1'd1),
-    .adc_config_ctrl ({total_delay, ch_index_delay, order, delayed_bits}),
+    .adc_config_wr (),
+    .adc_config_ctrl ({total_delay, ch_index_delay, order, delayed_bits}), // to be removed
+    .adc_config_rd ('d0),
+    .adc_ctrl_status ('d0),
     .up_usr_chanmax_out (),
-    .up_usr_chanmax_in (8),
+    .up_usr_chanmax_in (8'd8),
     .up_adc_gpio_in (32'b0),
     .up_adc_gpio_out (),
     .up_rstn (up_rstn),
@@ -486,29 +459,6 @@ module axi_ad4858 #(
     .up_raddr (up_raddr_s),
     .up_rdata (up_rdata_s[8]),
     .up_rack (up_rack_s[8]));
-
-  // adc delay control
-
-  up_delay_cntrl #(
-    .DATA_WIDTH(2),
-    .BASE_ADDRESS(6'h02)
-  ) i_delay_cntrl (
-    .delay_clk (delay_clk),
-    .delay_rst (delay_rst),
-    .delay_locked (delay_locked),
-    .up_dld (up_dld),
-    .up_dwdata (up_dwdata),
-    .up_drdata (up_drdata),
-    .up_rstn (up_rstn),
-    .up_clk (up_clk),
-    .up_wreq (up_wreq_s),
-    .up_waddr (up_waddr_s),
-    .up_wdata (up_wdata_s),
-    .up_wack (up_wack_s[9]),
-    .up_rreq (up_rreq),
-    .up_raddr (up_raddr),
-    .up_rdata (up_rdata_s[9]),
-    .up_rack (up_rack_s[9]));
 
   // up bus interface
 
