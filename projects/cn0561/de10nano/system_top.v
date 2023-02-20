@@ -121,7 +121,7 @@ module system_top (
   output            ltc2308_cs,
   output            ltc2308_sclk,
   output            ltc2308_mosi,
-  input             ltc2308_miso
+  input             ltc2308_miso,
 
   // cn0561 SPI configuration interface
 
@@ -129,7 +129,7 @@ module system_top (
   output            cn0561_spi_sdo,
   output            cn0561_spi_sclk,
   output            cn0561_spi_cs,
-  
+
   // cn0561 data interface
 
   output            cn0561_dclk,
@@ -267,7 +267,7 @@ module system_top (
     .cn0561_spi_sdi_sdi (cn0561_spi_sdi),
     .cn0561_spi_cs_cs (cn0561_spi_cs),
     .cn0561_spi_sclk_clk (cn0561_spi_sclk),
-    .cn0561_spi_trigger_trigger (cn0561_drdy),
+    .ad4134_odr_if_pwm(cn0561_odr),
     .sys_spi_MISO (1'b0),
     .sys_spi_MOSI (),
     .sys_spi_SCLK (),
