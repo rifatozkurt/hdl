@@ -37,6 +37,7 @@
 
 module axi_ad4858 #(
 
+  parameter       ILA_DEBUG = 0,
   parameter       FPGA_TECHNOLOGY = 0,
   parameter       ID = 0,
   parameter       LVDS_CMOS_N = 1,
@@ -279,6 +280,7 @@ module axi_ad4858 #(
         assign scko_s_n = scki_n;
       end
       axi_ad4858_lvds #(
+        .ILA_DEBUG (ILA_DEBUG),
         .FPGA_TECHNOLOGY (FPGA_TECHNOLOGY))
       i_ad4858_lvds_interface (
         .rst (adc_rst_s),
@@ -342,6 +344,7 @@ module axi_ad4858 #(
         assign scko_s = scki;
       end
       axi_ad4858_cmos #(
+        .ILA_DEBUG (ILA_DEBUG),
         .ACTIVE_LANE (ACTIVE_LANES))
       i_ad4858_cmos_interface (
         .rst (adc_rst_s),
@@ -370,6 +373,7 @@ module axi_ad4858 #(
 
     for (i = 0; i < 8; i=i+1) begin : channel
       axi_ad4858_channel #(
+        .ILA_DEBUG (ILA_DEBUG),
         .CHANNEL_ID(i)
       ) i_adc_channel (
         .adc_clk (adc_clk_s),

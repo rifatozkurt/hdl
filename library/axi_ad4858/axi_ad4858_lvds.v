@@ -37,6 +37,7 @@
 
 module axi_ad4858_lvds #(
 
+  parameter       ILA_DEBUG = 1,
   parameter FPGA_TECHNOLOGY = 0,
   parameter IODELAY_GROUP = "dev_if_delay_group",
   parameter NEG_EDGE = 1

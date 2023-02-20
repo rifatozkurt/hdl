@@ -7,6 +7,55 @@ source $ad_hdl_dir/library/scripts/adi_ip_xilinx.tcl
 global VIVADO_IP_LIBRARY
 
 adi_ip_create axi_ad4858
+    create_ip -name ila -vendor xilinx.com -library ip -version 6.2 -module_name channel_ila
+    set_property -dict [list CONFIG.C_MONITOR_TYPE {Native}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_NUM_OF_PROBES {10}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_DATA_DEPTH {1024}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_TRIGIN_EN {false}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_EN_STRG_QUAL {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_ADV_TRIGGER {true}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.ALL_PROBE_SAME_MU_CNT {2}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE0_WIDTH {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE1_WIDTH {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE2_WIDTH {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE3_WIDTH {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE4_WIDTH {32}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE5_WIDTH {32}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE6_WIDTH {24}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE7_WIDTH {32}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE8_WIDTH {1}] [get_ips channel_ila]
+    set_property -dict [list CONFIG.C_PROBE9_WIDTH {7}] [get_ips channel_ila]
+    generate_target {all} [get_files axi_ad4858.srcs/sources_1/ip/channel_ila/channel_ila.xci]
+
+    create_ip -name ila -vendor xilinx.com -library ip -version 6.2 -module_name cmos_if_ila
+    set_property -dict [list CONFIG.C_MONITOR_TYPE {Native}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_NUM_OF_PROBES {18}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_DATA_DEPTH {1024}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_TRIGIN_EN {false}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_EN_STRG_QUAL {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_ADV_TRIGGER {true}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.ALL_PROBE_SAME_MU_CNT {2}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE0_WIDTH {6}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE1_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE2_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE3_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE4_WIDTH {6}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE5_WIDTH {32}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE6_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE7_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE8_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE9_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE10_WIDTH {32}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE11_WIDTH {32}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE12_WIDTH {32}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE13_WIDTH {32}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE14_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE15_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE16_WIDTH {1}] [get_ips cmos_if_ila]
+    set_property -dict [list CONFIG.C_PROBE17_WIDTH {8}] [get_ips cmos_if_ila]
+    generate_target {all} [get_files axi_ad4858.srcs/sources_1/ip/cmos_if_ila/cmos_if_ila.xci]
+
+
 adi_ip_files axi_ad4858 [list \
     "$ad_hdl_dir/library/common/ad_edge_detect.v" \
     "$ad_hdl_dir/library/common/ad_datafmt.v" \

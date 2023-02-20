@@ -37,6 +37,7 @@
 
 module axi_ad4858_channel #(
 
+  parameter       ILA_DEBUG = 1,
   parameter CHANNEL_ID = 0,
   parameter USERPORTS_DISABLE = 0,
   parameter DATAFORMAT_DISABLE = 0
@@ -161,6 +162,29 @@ module axi_ad4858_channel #(
     end
   end
 
+////////////////////////////////////////////////////////////////////
+// DEBUG
+    // instantiate the ILA core inside of a module in the IP (don't need to be the top module)
+
+    generate
+      if (CHANNEL_ID <= 2) begin // not enough resoures on zed for a debug core on all channels
+        if (ILA_DEBUG) begin
+          channel_ila i_ila (
+            .clk(adc_clk),
+            .probe1(adc_dfmt_enable_s),
+            .probe2(adc_dfmt_type_s),
+            .probe3(adc_valid),
+            .probe4(adc_data_f2_ovs),
+            .probe5(adc_data_f2),
+            .probe6(adc_data_f1),
+            .probe7(adc_ch_data_in),
+            .probe8(adc_or),
+            .probe9(adc_status_header));
+        end
+      end
+    endgenerate
+
+////////////////////////////////////////////////////////////////////
   ad_datafmt #(
     .DATA_WIDTH (20),
     .BITS_PER_SAMPLE (32),

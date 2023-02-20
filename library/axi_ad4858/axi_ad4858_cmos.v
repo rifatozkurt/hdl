@@ -37,6 +37,7 @@
 
 module axi_ad4858_cmos #(
 
+  parameter       ILA_DEBUG = 1,
   parameter ACTIVE_LANE = 8'b11111111
 ) (
 
@@ -149,6 +150,37 @@ module axi_ad4858_cmos #(
   wire                conversion_quiet_time_s;
 
   wire        [ 5:0]  packet_lenght;
+
+////////////////////////////////////////////////////////////////////
+// DEBUG
+    // instantiate the ILA core inside of a module in the IP (don't need to be the top module)
+
+    generate
+      if (ILA_DEBUG) begin
+        cmos_if_ila i_ila (
+          .clk(clk),
+          .probe0(packet_lenght),
+          .probe1(busy),
+          .probe2(start_transfer),
+          .probe3(aquire_data),
+          .probe4(scki_counter),
+          .probe5(busy_measure_value),
+          .probe6(conversion_quiet_time_s),
+          .probe7(conversion_completed),
+          .probe8(scki),
+          .probe9(scko),
+          .probe10(adc_lane_0),
+          .probe11(adc_lane_7),
+          .probe12(adc_data_store[0]),
+          .probe13(adc_data_store[7]),
+          .probe14(adc_valid),
+          .probe15(oversampling_en),
+          .probe16(adc_crc_enable),
+          .probe17(adc_enable));
+      end
+    endgenerate
+
+////////////////////////////////////////////////////////////////////
 
   // packet format selection
 
