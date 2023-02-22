@@ -22,5 +22,6 @@ INTEL_DEPS += ../util_cdc/sync_data.v
 INTEL_DEPS += ../util_cdc/sync_bits.v
 INTEL_DEPS += ../intel/common/up_rst_constr.sdc
 INTEL_DEPS += axi_pwm_gen_hw.tcl
+INTEL_DEPS += axi_pwm_gen_constr.sdc
 
 include ../scripts/library.mk

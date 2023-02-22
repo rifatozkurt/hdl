@@ -13,6 +13,8 @@ ad_ip_files axi_pwm_gen [list \
   $ad_hdl_dir/library/common/ad_rst.v \
   $ad_hdl_dir/library/common/up_axi.v \
   $ad_hdl_dir/library/intel/common/up_rst_constr.sdc \
+  $ad_hdl_dir/library/util_cdc/util_cdc_constr.tcl \
+  axi_pwm_gen_constr.sdc \
   axi_pwm_gen_regmap.v \
   axi_pwm_gen_1.v \
   axi_pwm_gen.v]
