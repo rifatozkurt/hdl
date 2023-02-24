@@ -106,16 +106,17 @@ module axi_ad4858_channel #(
   /////////////////
   wire  [31:0]           test_pattern;
   wire  [31:0]           expected_pattern;
-
-
-  assign adc_pn_err_s = adc_pn_err;
+  wire  [31:0]           expected_package_pattern;
 
   // expected pattern
 
-  assign expected_pattern = 16'b1100110000111111;
+  assign expected_pattern = {CHANNEL_ID[3:0], 28'hace3c2a};
+  assign expected_package_pattern = packet_format == 2'd0 ? expected_pattern >> 12:
+                                    packet_format == 2'd1 ? expected_pattern >> 8:
+                                    packet_format == 2'd2 ? expected_pattern : expected_pattern;
 
   always @(posedge adc_clk) begin
-    if (expected_pattern == adc_ch_data_in) begin
+    if (expected_package_pattern == adc_raw_data) begin
       adc_pn_err <= 1'b0;
     end else begin
       adc_pn_err <= 1'b1;
@@ -131,12 +132,12 @@ module axi_ad4858_channel #(
       adc_status_header <= 7'd0;
     end else begin
       adc_valid_f1 <= adc_ch_valid_in;
-      if (packet_format == 0) begin
+      if (packet_format == 2'd0) begin
         adc_raw_data <= {12'd0,adc_ch_data_in[19:0]};
         adc_data_f1 <= adc_ch_data_in[23:0];
         adc_or <= 1'b0;
         adc_status_header <= 7'd0;
-      end else if (packet_format == 1) begin
+      end else if (packet_format == 2'd1) begin
         adc_raw_data <= {8'd0,adc_ch_data_in[23:0]};
         if (oversampling_en == 0) begin
           adc_data_f1 <= {4'd0, adc_ch_data_in[23:4]};
@@ -251,7 +252,7 @@ module axi_ad4858_channel #(
     .adc_iqcor_coeff_2 (),
     .adc_pnseq_sel (),
     .adc_data_sel (),
-    .adc_pn_err (adc_pn_err_s),
+    .adc_pn_err (adc_pn_err),
     .adc_pn_oos (1'b0),
     .adc_or (1'b0),
     .adc_read_data (read_channel_data),

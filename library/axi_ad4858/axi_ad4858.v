@@ -195,6 +195,10 @@ module axi_ad4858 #(
 
   wire                    adc_crc_enable_s;
 
+   /////////////////////////////////////////////////////////////
+   //to be removed
+   wire [15:0] extra_bits;
+
   wire    [ 3:0]          order;
   wire    [ 3:0]          delayed_bits;
   wire    [ 3:0]  ch_index_delay ;
@@ -330,7 +334,7 @@ module axi_ad4858 #(
         .up_waddr (up_waddr_s),
         .up_wdata (up_wdata_s),
         .up_wack (up_wack_s[9]),
-        .up_rreq (up_rreq),
+        .up_rreq (up_rreq_s),
         .up_raddr (up_raddr_s),
         .up_rdata (up_rdata_s[9]),
         .up_rack (up_rack_s[9]));
@@ -446,7 +450,7 @@ module axi_ad4858 #(
     .up_drp_ready (1'd0),
     .up_drp_locked (1'd1),
     .adc_config_wr (),
-    .adc_config_ctrl ({total_delay, ch_index_delay, order, delayed_bits}), // to be removed
+    .adc_config_ctrl ({extra_bits,total_delay, ch_index_delay, order, delayed_bits}), // to be removed
     .adc_config_rd ('d0),
     .adc_ctrl_status ('d0),
     .up_usr_chanmax_out (),

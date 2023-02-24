@@ -186,7 +186,7 @@ module axi_ad4858_cmos #(
 
   assign packet_lenght = packet_format == 2'd0 ? 6'd20 :
                          packet_format == 2'd1 ? 6'd24 :
-                         packet_format == 2'd2 ? 6'd32 : 6'd20;
+                         packet_format == 2'd2 ? 6'd32 : 6'd32;
 
   // instantiations
 

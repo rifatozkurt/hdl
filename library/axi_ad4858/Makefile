@@ -11,6 +11,7 @@ GENERIC_DEPS += ../common/up_axi.v
 GENERIC_DEPS += axi_ad4858.v
 GENERIC_DEPS += axi_ad4858_cmos.v
 GENERIC_DEPS += axi_ad4858_lvds.v
+GENERIC_DEPS += axi_ad4858_channel.v
 
 XILINX_DEPS += axi_ad4858_ip.tcl
 

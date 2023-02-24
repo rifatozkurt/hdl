@@ -103,7 +103,6 @@ module axi_ad4858_lvds #(
   reg         [ 5:0]  data_counter_m2 = 'h0;
   reg         [ 5:0]  data_counter_m1 = 'h0;
   reg         [ 5:0]  data_counter = 'h0;
-  reg         [ 5:0]  scki_counter = 'h0;
   reg         [ 3:0]  ch_counter = 'h0;
   reg                 new_data = 1'b0;
 
@@ -123,12 +122,10 @@ module axi_ad4858_lvds #(
   reg                 ch_valid;
 
   reg         [31:0]  adc_data_store[8:0];
-  reg                 active_transfer;
-  reg         [ 3:0]  max_channel_transfer = 8 -1;
-  reg         [ 8:0]  data_packets = 9'd24 - 4;
+  reg                 aquire_data;
   reg         [ 3:0]  if_data_d;
   reg         [ 3:0]  if_data_d_bits;
-  reg         [ 3:0]  if_valid_data;
+  reg                 clk_data_reduced;
   reg                 start_transfer;
 
   // internal wires
@@ -139,13 +136,63 @@ module axi_ad4858_lvds #(
   wire        [ 7:0]  double_if_data_d;
   wire        [ 3:0]  if_data_reoder;
   wire        [15:0]  crc_data;
+  wire                conversion_completed;
+  wire                conversion_quiet_time_s;
   wire        [ 5:0]  packet_lenght;
+  wire        [ 3:0]  max_channel_transfer;
 
-  // packet format selection
 
-  assign packet_lenght = packet_format == 2'd0 ? 6'd20 :
-                         packet_format == 2'd1 ? 6'd24 :
-                         packet_format == 2'd2 ? 6'd32 : 6'd20;
+  reg  [15:0]  ch_index_dynamic_delay[3:0];
+  reg  [15:0]  valid_dynamic_delay;
+
+  wire [ 3:0]  ch_index_dn;
+  wire         ch_valid_dn;
+
+////////////////////////////////////////////////////////////////////
+// DEBUG
+    // instantiate the ILA core inside of a module in the IP (don't need to be the top module)
+
+    generate
+      if (ILA_DEBUG) begin
+        lvds_if_ila i_ila (
+          .clk(clk),
+          .probe0(packet_lenght),
+          .probe1(busy),
+          .probe2(start_transfer),
+          .probe3(aquire_data),
+          .probe4(clk_data_reduced),
+          .probe5(busy_measure_value),
+          .probe6(conversion_quiet_time_s),
+          .probe7(conversion_completed),
+          .probe8(clk_data),
+          .probe9(if_data),
+          .probe10(ch_index_dn[3:0]),
+          .probe11(ch_valid_dn),
+          .probe12(adc_data_store[0]),
+          .probe13(adc_data_store[7]),
+          .probe14(adc_valid),
+          .probe15(oversampling_en),
+          .probe16(adc_crc_enable),
+          .probe17(ch_counter),
+          .probe18(max_channel_transfer),
+          .probe19(data_counter),
+          .probe20(adc_enable),
+          .probe21(ch_valid),
+          .probe22(valid_dynamic_delay)
+        );
+      end
+    endgenerate
+
+////////////////////////////////////////////////////////////////////
+
+
+  // packet format selection (-4 becuse of the serdes factor)
+
+  assign packet_lenght = packet_format == 2'd0 ? 6'd20 - 6'd4 :
+                         packet_format == 2'd1 ? 6'd24 - 6'd4 :
+                         packet_format == 2'd2 ? 6'd32 - 6'd4 : 6'd32 - 6'd4;
+
+  assign max_channel_transfer = oversampling_en ? 8 : 7;
 
   // instantiations
 
@@ -209,26 +256,25 @@ module axi_ad4858_lvds #(
   assign conversion_quiet_time_s = (oversampling_en == 1) ? conversion_quiet_time | cnvs : 1'b0;
   assign conversion_completed = (period_cnt == busy_measure_value) ? 1'b1 : 1'b0;
   assign adc_cnvs_redge = ~cnvs_d & cnvs;
-  assign scki_cnt_rst = (scki_counter == packet_lenght) ? 1'b1 : 1'b0;
 
   always @(posedge clk) begin
     if (rst == 1'b1) begin
       data_counter <= 2'h0;
       ch_counter <= 4'h0;
       ch_valid <= 1'b0;
-      active_transfer <= 1'b0;
+      aquire_data <= 1'b0;
     end else begin
-      if (active_transfer == 1'b0 || data_counter == data_packets) begin
+      if (aquire_data == 1'b0 || data_counter == packet_lenght) begin
         data_counter <= 2'h0;
       end else begin
         data_counter <= data_counter + 4;
       end
 
-      if (busy == 1'b1) begin
+      if (start_transfer == 1'b1) begin
         ch_counter <= 4'h0;
         ch_valid <= 1'b0;
       end else begin
-        if (data_counter == data_packets) begin
+        if (data_counter == packet_lenght) begin
           if (ch_counter == max_channel_transfer) begin
             ch_counter <= 4'h0;
             ch_valid <= 1'b1;
@@ -242,10 +288,10 @@ module axi_ad4858_lvds #(
         end
       end
 
-      if (data_counter == data_packets && ch_counter == max_channel_transfer) begin
-        active_transfer <= 1'b0;
-      end else if (active_transfer || start_transfer) begin
-        active_transfer <= ~conversion_quiet_time_s;
+      if (data_counter == packet_lenght && ch_counter == max_channel_transfer) begin
+        aquire_data <= 1'b0;
+      end else if (aquire_data || start_transfer) begin
+        aquire_data <= ~conversion_quiet_time_s;
       end
     end
   end
@@ -255,7 +301,7 @@ module axi_ad4858_lvds #(
   // in separate frames delimited by div_clk due to phase differences.
   always @(posedge clk) begin
     if_data_d <= if_data;
-    if_valid_data <= |clk_data;
+    clk_data_reduced <= |clk_data;
 
     if_data_d_bits[0] <= delayed_bits[0] ? if_data[0] : if_data_d[0];
     if_data_d_bits[1] <= delayed_bits[1] ? if_data[1] : if_data_d[1];
@@ -263,11 +309,6 @@ module axi_ad4858_lvds #(
     if_data_d_bits[3] <= delayed_bits[3] ? if_data[3] : if_data_d[3];
   end
 
-  reg  [15:0]  ch_index_dynamic_delay[3:0];
-  reg  [15:0]  valid_dynamic_delay;
-
-  wire [ 3:0]  ch_index_dn ;
-  wire         ch_valid_dn ;
 
   genvar i;
   generate
@@ -286,8 +327,8 @@ module axi_ad4858_lvds #(
   end
   assign ch_valid_dn = valid_dynamic_delay[total_delay[3:0]];
 
-  // because the fast and divided clocks used by the iserdes are not source
-  // synchronous bit arrangement might not be correct.
+  // because the data is not source synchronous with the fast and divided
+  // clocks used by the iserdes, bit arrangement might not be correct.
   assign double_if_data_d = {if_data_d_bits, if_data_d_bits};
   assign if_data_reoder = double_if_data_d[order+3-:4];
 
@@ -383,9 +424,9 @@ module axi_ad4858_lvds #(
     .div_clk(clk),
     .data_oe(1'b1),
     .data_s0(1'b0),
-    .data_s1(active_transfer | rst),
+    .data_s1(aquire_data),
     .data_s2(1'b0),
-    .data_s3(active_transfer | rst),
+    .data_s3(aquire_data),
     .data_s4(),
     .data_s5(),
     .data_s6(),
