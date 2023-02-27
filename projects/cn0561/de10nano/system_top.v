@@ -156,13 +156,15 @@ module system_top (
 
   // unused
   assign gpio_i[63:33] = gpio_o[63:33];
+  assign gpio_i[31:14] = gpio_o[31:14];
+  assign gpio_i[ 7: 0] = gpio_o[ 7: 0];
 
   // GPIO outputs
+  assign ltc2308_cs = gpio_o[41];
   assign cn0561_pdn = gpio_o[32];
   assign gpio_bd_o[7:0] = gpio_o[7:0];
 
   // GPIO inputs
-  assign gpio_i[31:14] = gpio_o[31:14];
   assign gpio_i[13:8] = gpio_bd_i[5:0];
 
 
@@ -263,15 +265,15 @@ module system_top (
     .sys_gpio_bd_out_port (gpio_o[31:0]),
     .sys_gpio_in_export (gpio_i[63:32]),
     .sys_gpio_out_export (gpio_o[63:32]),
-    .cn0561_spi_sdo_sdo (cn0561_spi_sdo),
-    .cn0561_spi_sdi_sdi (cn0561_spi_sdi),
-    .cn0561_spi_cs_cs (cn0561_spi_cs),
-    .cn0561_spi_sclk_clk (cn0561_spi_sclk),
+    .cn0561_spi_sdo_sdo (),
+    .cn0561_spi_sdi_sdi (cn0561_din),
+    .cn0561_spi_cs_cs (),
+    .cn0561_spi_sclk_clk (cn0561_dclk),
     .ad4134_odr_if_pwm(cn0561_odr),
-    .sys_spi_MISO (1'b0),
-    .sys_spi_MOSI (),
-    .sys_spi_SCLK (),
-    .sys_spi_SS_n (),
+    .sys_spi_MISO (cn0561_spi_sdi),
+    .sys_spi_MOSI (cn0561_spi_sdo),
+    .sys_spi_SCLK (cn0561_spi_sclk),
+    .sys_spi_SS_n (cn0561_spi_cs),
     .ltc2308_spi_MISO (ltc2308_miso),
     .ltc2308_spi_MOSI (ltc2308_mosi),
     .ltc2308_spi_SCLK (ltc2308_sclk),
