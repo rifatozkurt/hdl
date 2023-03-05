@@ -48,25 +48,16 @@ ad_ip_parameter axi_ad7134_dma CONFIG.DMA_DATA_WIDTH_DEST 128
 # odr generator
 
 ad_ip_instance axi_pwm_gen odr_generator
-ad_ip_parameter odr_generator CONFIG.N_PWMS 1
-ad_ip_parameter odr_generator CONFIG.PULSE_0_PERIOD 10000
-ad_ip_parameter odr_generator CONFIG.PULSE_0_WIDTH 4
-ad_ip_parameter odr_generator CONFIG.ASYNC_CLK_EN 0
+ad_ip_parameter odr_generator CONFIG.N_PWMS 3
+ad_ip_parameter odr_generator CONFIG.PULSE_1_PERIOD 85
+ad_ip_parameter odr_generator CONFIG.PULSE_1_WIDTH 13
+ad_ip_parameter odr_generator CONFIG.PULSE_1_OFFSET 3
+ad_ip_parameter odr_generator CONFIG.PULSE_2_PERIOD 85
+ad_ip_parameter odr_generator CONFIG.PULSE_2_WIDTH 1
 
-create_bd_cell -type module -reference sync_bits busy_sync
-create_bd_cell -type module -reference ad_edge_detect busy_capture
-set_property -dict [list CONFIG.EDGE 1] [get_bd_cells busy_capture]
-
-ad_connect odr_generator/pwm_0 ad713x_odr
-
-ad_connect axi_ad7134_clkgen/clk_0 busy_capture/clk
-ad_connect axi_ad7134_clkgen/clk_0 busy_sync/out_clk
-ad_connect busy_capture/rst GND
-ad_connect  $hier_spi_engine/${hier_spi_engine}_axi_regmap/spi_resetn busy_sync/out_resetn
-
-ad_connect ad713x_odr busy_sync/in_bits
-ad_connect busy_sync/out_bits busy_capture/signal_in
-ad_connect busy_capture/signal_out $hier_spi_engine/trigger
+ad_connect odr_generator/ext_clk axi_ad7134_clkgen/clk_0
+ad_connect odr_generator/pwm_1 ad713x_odr
+ad_connect odr_generator/pwm_2 $hier_spi_engine/trigger
 
 # sdpclk clock generator - default clk0_out is 50 MHz
 
@@ -88,15 +79,20 @@ ad_connect  $hier_spi_engine/m_spi ad713x_di
 ad_connect  axi_ad7134_dma/s_axis $hier_spi_engine/M_AXIS_SAMPLE
 ad_connect  ad713x_sdpclk axi_sdp_clkgen/clk_0
 
+# AXI address definitions
+
 ad_cpu_interconnect 0x44a00000 $hier_spi_engine/${hier_spi_engine}_axi_regmap
 ad_cpu_interconnect 0x44a30000 axi_ad7134_dma
 ad_cpu_interconnect 0x44a40000 axi_sdp_clkgen
 ad_cpu_interconnect 0x44b00000 odr_generator
 ad_cpu_interconnect 0x44b10000 axi_ad7134_clkgen
 
+# interrupts
+
 ad_cpu_interrupt "ps-13" "mb-13" axi_ad7134_dma/irq
 ad_cpu_interrupt "ps-12" "mb-12" $hier_spi_engine/irq
 
+# memory interconnects
+
 ad_mem_hp2_interconnect sys_cpu_clk sys_ps7/S_AXI_HP2
 ad_mem_hp2_interconnect sys_cpu_clk axi_ad7134_dma/m_dest_axi
-
