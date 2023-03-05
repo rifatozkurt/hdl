@@ -1,6 +1,6 @@
 // ***************************************************************************
 // ***************************************************************************
-// Copyright 2022 (c) Analog Devices, Inc. All rights reserved.
+// Copyright 2022 - 2023 (c) Analog Devices, Inc. All rights reserved.
 //
 // In this HDL repository, there are many different and unique modules, consisting
 // of various HDL (Verilog or VHDL) components. The individual modules are
@@ -76,7 +76,6 @@ module system_top (
   output          i2s_sdata_out,
   input           i2s_sdata_in,
 
-
   inout           iic_scl,
   inout           iic_sda,
   inout   [ 1:0]  iic_mux_scl,
@@ -112,7 +111,8 @@ module system_top (
   inout           ad4134_gpio6,
   inout           ad4134_gpio7,
   inout           ad4134_dclk_mode,
-  inout           ad4134_dclkio);
+  inout           ad4134_dclkio
+);
 
   // internal signals
 
