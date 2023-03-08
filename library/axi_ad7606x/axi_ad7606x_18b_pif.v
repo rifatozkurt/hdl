@@ -36,7 +36,6 @@
 `timescale 1ns/100ps
 
 module axi_ad7606x_18b_pif #(
-  parameter ADC_READ_MODE = 0,
   parameter NEG_EDGE = 1,
   parameter POS_EDGE = 0
 ) (
@@ -114,6 +113,7 @@ module axi_ad7606x_18b_pif #(
   reg                 read_ch_data = 1'd0;
 
   reg         [ 7:0]  adc_status_er_ch_id = 8'h0;
+  reg         [ 1:0]  adc_config_mode = 2'h0;
 
   // internal wires
 
@@ -158,6 +158,40 @@ module axi_ad7606x_18b_pif #(
 
   assign start_transfer_s = (end_of_conv | adc_config_en) ? 1'b1 : 1'b0;
 
+  always @(*) begin
+    if (adc_config_en) begin
+      case (wr_data[15:8])
+	8'h21: begin
+          if (wr_data[2] == 1'b1 && adc_config_mode == SIMPLE) begin  
+            adc_config_mode = CRC_ENABLED;
+          end else if (wr_data[2] == 1'b1 && adc_config_mode == STATUS_HEADER) begin
+            adc_config_mode = CRC_STATUS;
+          end else if (wr_data[2] == 1'b0 && adc_config_mode == CRC_ENABLED) begin
+            adc_config_mode = SIMPLE;
+          end else if (wr_data[2] == 1'b0 && adc_config_mode == CRC_STATUS) begin
+            adc_config_mode = STATUS_HEADER;
+          end else begin
+            adc_config_mode = adc_config_mode;
+          end
+        end
+	8'h02: begin
+          if (wr_data[3] == 1'b1 && adc_config_mode == SIMPLE) begin
+            adc_config_mode = STATUS_HEADER;
+          end else if (wr_data[6] == 1'b1 && adc_config_mode == CRC_ENABLED) begin
+            adc_config_mode = CRC_STATUS;
+          end else if (wr_data[6] == 1'b0 && adc_config_mode == STATUS_HEADER) begin
+            adc_config_mode = SIMPLE;
+          end else if (wr_data[6] == 1'b0 && adc_config_mode == CRC_STATUS) begin
+            adc_config_mode = CRC_ENABLED;
+          end else begin
+            adc_config_mode = adc_config_mode;
+          end
+        end
+        default: adc_config_mode = adc_config_mode;
+      endcase
+    end
+  end
+
   always @(negedge clk) begin
     if (transfer_state == IDLE) begin
       rd_conv_d <= end_of_conv;
@@ -190,14 +224,14 @@ module axi_ad7606x_18b_pif #(
   end
 
   always @(posedge clk) begin
-    if (ADC_READ_MODE == SIMPLE || ADC_READ_MODE == STATUS_HEADER) begin
+    if (adc_config_mode == SIMPLE || adc_config_mode == STATUS_HEADER) begin
       nr_rd_burst = 5'd16;
       if ((first_data & ~cs_n) && ~adc_config_enable_d) begin
         read_ch_data <= 1'b1;
       end else if (channel_counter == 5'd16 && transfer_state == IDLE) begin
         read_ch_data <= 1'b0;
       end
-    end else if (ADC_READ_MODE == CRC_ENABLED || ADC_READ_MODE == CRC_STATUS) begin
+    end else if (adc_config_mode == CRC_ENABLED || adc_config_mode == CRC_STATUS) begin
       nr_rd_burst = 5'd17;
       if ((first_data & ~cs_n) && ~adc_config_enable_d) begin
         read_ch_data <= 1'b1;
@@ -214,7 +248,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd1 : begin
           adc_data_0[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_0 <= rd_data[7:0];
           end
         end
@@ -223,7 +257,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd3 : begin
           adc_data_1[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_1 <= rd_data[7:0];
           end
         end
@@ -232,7 +266,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd5 : begin
           adc_data_2[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_2 <= rd_data[7:0];
           end
         end
@@ -241,7 +275,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd7 : begin
           adc_data_3[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_3 <= rd_data[7:0];
           end
         end
@@ -250,7 +284,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd9 : begin
           adc_data_4[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_4 <= rd_data[7:0];
           end
         end
@@ -259,7 +293,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd11 : begin
           adc_data_5[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_5 <= rd_data[7:0];
           end
         end
@@ -268,7 +302,7 @@ module axi_ad7606x_18b_pif #(
         end
         5'd13 : begin
           adc_data_6[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_6 <= rd_data[7:0];
           end
         end
@@ -277,21 +311,21 @@ module axi_ad7606x_18b_pif #(
         end
         5'd15 : begin
           adc_data_7[1:0] <= rd_data[15:14];
-          if (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) begin
+          if (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) begin
             adc_status_7 <= rd_data[7:0];
           end
         end
         5'd16 : begin
           adc_crc <= rd_data;
-          if (ADC_READ_MODE == CRC_ENABLED) begin
+          if (adc_config_mode == CRC_ENABLED) begin
             adc_crc_res <= crc_256({adc_data_0,14'b0,adc_data_1,14'b0,adc_data_2,14'b0,adc_data_3,14'b0,adc_data_4,14'b0,adc_data_5,14'b0,adc_data_6,14'b0,adc_data_7,14'b0});
-          end else if (ADC_READ_MODE == CRC_STATUS) begin
+          end else if (adc_config_mode == CRC_STATUS) begin
             adc_crc_res <= crc_256({adc_data_0,6'b0,adc_status_0,adc_data_1,6'b0,adc_status_1,adc_data_2,6'b0,adc_status_2,adc_data_3,6'b0,adc_status_3,adc_data_4,6'b0,adc_status_4,adc_data_5,6'b0,adc_status_5,adc_data_6,6'b0,adc_status_6,adc_data_7,6'b0,adc_status_7});
           end
         end
       endcase
     end
-    case (ADC_READ_MODE)
+    case (adc_config_mode)
       SIMPLE: begin
         adc_valid <= (channel_counter == 5'd16) ? rd_valid_d : 1'b0;
       end
@@ -384,7 +418,7 @@ module axi_ad7606x_18b_pif #(
 
   assign adc_status_er_5b = adc_status_0[7:3] | adc_status_1[7:3] | adc_status_2[7:3] | adc_status_3[7:3] | adc_status_4[7:3] | adc_status_5[7:3] | adc_status_6[7:3] | adc_status_7[7:3];
   assign adc_status_er = adc_status_er_5b[0] | adc_status_er_5b[1] | adc_status_er_5b[2] | adc_status_er_5b[3] | adc_status_er_5b[4];
-  assign adc_status = (ADC_READ_MODE == STATUS_HEADER || ADC_READ_MODE == CRC_STATUS) ? (adc_status_er ? 1'b0 : 1'b1) : 1'b1;
+  assign adc_status = (adc_config_mode == STATUS_HEADER || adc_config_mode == CRC_STATUS) ? (adc_status_er ? 1'b0 : 1'b1) : 1'b1;
 
   assign cs_n = (transfer_state == IDLE) ? 1'b1 : 1'b0;
   assign db_t = (adc_config_enable_d == 1'b1 && adc_config_rd_wr == 1'b0) ? 1'b0 : 1'b1;

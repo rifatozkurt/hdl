@@ -41,7 +41,6 @@ module axi_ad7606x #(
   parameter       DEV_CONFIG = 0,
   parameter       ADC_TO_DMA_N_BITS = 16,
   parameter       ADC_N_BITS = 16,
-  parameter       ADC_READ_MODE = 0,
   parameter       EXTERNAL_CLK = 0
 ) (
 
@@ -300,7 +299,6 @@ module axi_ad7606x #(
   generate
     if (DEV_CONFIG == 0 || DEV_CONFIG == 1) begin
       axi_ad7606x_16b_pif #(
-        .ADC_READ_MODE (ADC_READ_MODE)
       ) i_ad7606_parallel_interface (
         .cs_n (rx_cs_n),
         .db_o (rx_db_o),
@@ -340,7 +338,6 @@ module axi_ad7606x #(
         .rd_valid (rd_valid_s));
     end else begin
       axi_ad7606x_18b_pif #(
-        .ADC_READ_MODE (ADC_READ_MODE)
       ) i_ad7606_parallel_interface (
         .cs_n (rx_cs_n),
         .db_o (rx_db_o),

@@ -12,12 +12,10 @@ source $ad_hdl_dir/projects/scripts/adi_board.tcl
 #  - Options : No(0), Yes(1)
 
 set DEV_CONFIG [get_env_param DEV_CONFIG 0]
-set SIMPLE_STATUS_CRC [get_env_param SIMPLE_STATUS_CRC 0]
 set EXT_CLK [get_env_param EXT_CLK 0]
 
 adi_project ad7606x_fmc_zed 0 [list \
   DEV_CONFIG $DEV_CONFIG \
-  SIMPLE_STATUS_CRC $SIMPLE_STATUS_CRC \
   EXT_CLK $EXT_CLK \
 ]
 
